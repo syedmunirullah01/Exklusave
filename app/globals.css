@@ -8,9 +8,9 @@
   --color-muted: #64748b;
   --color-text: #0f172a;
   --color-border: rgba(0, 0, 0, 0.08);
-  --page-bg: #fafbfa;
+  --page-bg: #ffffff;
   --surface: var(--color-secondary);
-  --surface-soft: #f4f5f1;
+  --surface-soft: #f8fafc;
   --border: var(--color-border);
   --text: var(--color-text);
   --muted: var(--color-muted);
@@ -33,9 +33,7 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top, rgba(22, 163, 74, 0.06), transparent 25%),
-    linear-gradient(180deg, #fafbfa 0%, #edf0ea 100%);
+  background: #ffffff;
   color: var(--text);
   font-family: var(--font-plus-jakarta), sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -56,6 +54,21 @@ input {
   background: rgba(22, 163, 74, 0.15);
   color: #000;
 }
+
+/* Ensure text-white works inside dark hero sections */
+.bg-zinc-950 *,
+.bg-zinc-900 *,
+.bg-black * {
+  --tw-text-opacity: 1;
+}
+
+.bg-zinc-950 h1,
+.bg-zinc-950 h2,
+.bg-zinc-950 h3,
+.bg-zinc-950 p:not([class*="text-zinc"]):not([class*="text-emerald"]):not([class*="text-white/"]) {
+  color: inherit;
+}
+
 
 ::-webkit-scrollbar {
   width: 10px;

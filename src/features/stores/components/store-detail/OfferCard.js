@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { buildCountryPath } from "@/lib/countries";
+
 
 function ClockIcon({ className }) {
   return (
@@ -95,7 +95,7 @@ export default function OfferCard({ offer, store, index = 0 }) {
 
   const offerHref = offer.affiliateLink || store.affiliateLink || "#";
   const isExternal = Boolean(offer.affiliateLink || store.affiliateLink);
-  const actionHref = isExternal || offerHref === "#" ? offerHref : buildCountryPath(offerHref, store.countryCode);
+  const actionHref = offerHref;
   const isCoupon = offer.type === "Coupon" || Boolean(offer.code);
   const actionLabel = offer.ctaLabel || (isCoupon ? "Show Code" : "Get Deal");
 

@@ -1,155 +1,248 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 import { getPublicSiteSettings } from "@/server/services/settings-service";
 
-const topCategories = ["Fashion", "Food", "Footwear", "Travel", "Beauty", "Furniture", "Home & Garden", "E-Bike"];
-const topStores = ["Waterdrop", "Dorothy Perkins", "Debenhams", "Gousto UK", "EcoFlow", "FlexShopper", "Vitality", "Beginning Boutique AU"];
-const usefulLinks = ["Home", "Stores", "Categories", "Contact Us", "About Us", "Imprint", "Sitemap"];
+const topCategories = [
+  { label: "Fashion", href: "/categories/fashion" },
+  { label: "Food & Drink", href: "/categories/food" },
+  { label: "Footwear", href: "/categories/footwear" },
+  { label: "Travel", href: "/categories/travel" },
+  { label: "Beauty", href: "/categories/beauty" },
+  { label: "Furniture", href: "/categories/furniture" },
+  { label: "Home & Garden", href: "/categories/home-garden" },
+  { label: "Electronics", href: "/categories/electronics" },
+];
 
-function ArrowIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
-    </svg>
-  );
-}
+const topStores = [
+  { label: "Waterdrop", href: "/stores/health/waterdrop" },
+  { label: "Dorothy Perkins", href: "/stores/fashion/dorothy-perkins" },
+  { label: "Debenhams", href: "/stores/fashion/debenhams" },
+  { label: "Gousto UK", href: "/stores/food/gousto-uk" },
+  { label: "EcoFlow", href: "/stores/electronics/ecoflow" },
+  { label: "FlexShopper", href: "/stores/shopping/flexshopper" },
+  { label: "Vitality", href: "/stores/health/vitality" },
+  { label: "SKIMS", href: "/stores/fashion/skims" },
+];
 
-function MailIcon({ className = "h-5 w-5" }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <rect width="20" height="16" x="2" y="4" rx="2" />
-      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+const quickLinks = [
+  { label: "Home", href: "/" },
+  { label: "All Stores", href: "/stores" },
+  { label: "Categories", href: "/categories" },
+  { label: "Blogs", href: "/blogs" },
+  { label: "Contact Us", href: "/contact" },
+  { label: "About Us", href: "/about" },
+  { label: "Sitemap", href: "/site-index" },
+];
+
+const socialIcons = {
+  Facebook: (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
     </svg>
+  ),
+  Instagram: (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect width="20" height="20" x="2" y="2" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  X: (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  ),
+  TikTok: (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z" />
+    </svg>
+  ),
+  YouTube: (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.54C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
+      <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white" />
+    </svg>
+  ),
+};
+
+function TrustBadge({ icon, label }) {
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/5 px-3 py-2">
+      <span className="text-emerald-400 text-base">{icon}</span>
+      <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/50">{label}</span>
+    </div>
   );
 }
 
 export default async function Footer() {
   const settings = await getPublicSiteSettings();
+
   const socialLinks = [
-    { label: "Facebook", href: settings.social.facebook },
-    { label: "Instagram", href: settings.social.instagram },
-    { label: "X", href: settings.social.x },
-    { label: "TikTok", href: settings.social.tiktok },
-    { label: "YouTube", href: settings.social.youtube },
+    { label: "Facebook", href: settings.social?.facebook },
+    { label: "Instagram", href: settings.social?.instagram },
+    { label: "X", href: settings.social?.x },
+    { label: "TikTok", href: settings.social?.tiktok },
+    { label: "YouTube", href: settings.social?.youtube },
   ].filter((item) => item.href);
 
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="relative mt-32 overflow-hidden border-t border-zinc-200 bg-gradient-to-b from-white to-zinc-50/70 pt-20 pb-12 text-zinc-650 font-sans">
-      <div className="absolute top-0 left-1/4 h-px w-1/2 bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
-      <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[800px] -translate-x-1/2 rounded-full bg-emerald-500/5 blur-[120px]" />
+    <footer className="relative mt-24 overflow-hidden bg-zinc-950 text-white">
 
-      <div className="mx-auto max-w-[1400px] px-6 lg:px-10">
-        <div className="grid gap-16 border-b border-zinc-200 pb-16 lg:grid-cols-[1.45fr_0.95fr] lg:items-start">
-          
-          {/* Left Grid: 4 Columns of Links */}
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-            
-            <div className="flex flex-col gap-4.5">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-zinc-800">Top Categories</h4>
-              <nav className="flex flex-col gap-3">
-                {topCategories.map((link) => (
-                  <Link 
-                    key={link} 
-                    href="#" 
-                    className="text-[13px] font-bold text-zinc-500 transition-all duration-300 hover:text-emerald-600 hover:translate-x-1 inline-block"
-                  >
-                    {link}
-                  </Link>
-                ))}
-              </nav>
+      {/* Top glow accent */}
+      <div className="pointer-events-none absolute top-0 left-1/2 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[900px] -translate-x-1/2 rounded-full bg-emerald-500/8 blur-[100px]" />
+
+      {/* Newsletter Banner */}
+      <div className="relative border-b border-white/8">
+        <div className="mx-auto max-w-[1400px] px-6 lg:px-10 py-12 flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div className="text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 mb-4">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Exclusive Members Only</span>
             </div>
-
-            <div className="flex flex-col gap-4.5">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-zinc-800">Top Stores</h4>
-              <nav className="flex flex-col gap-3">
-                {topStores.map((link) => (
-                  <Link 
-                    key={link} 
-                    href="#" 
-                    className="text-[13px] font-bold text-zinc-500 transition-all duration-300 hover:text-emerald-600 hover:translate-x-1 inline-block"
-                  >
-                    {link}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-
-            <div className="flex flex-col gap-4.5">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-zinc-800">Useful Links</h4>
-              <nav className="flex flex-col gap-3">
-                {usefulLinks.map((link) => (
-                  <Link 
-                    key={link} 
-                    href="#" 
-                    className="text-[13px] font-bold text-zinc-500 transition-all duration-300 hover:text-emerald-600 hover:translate-x-1 inline-block"
-                  >
-                    {link}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-
-            {socialLinks.length ? (
-              <div className="flex flex-col gap-4.5">
-                <h4 className="text-[11px] font-black uppercase tracking-[0.22em] text-zinc-800">Social</h4>
-                <nav className="flex flex-col gap-3">
-                  {socialLinks.map((link) => (
-                    <Link 
-                      key={link.label} 
-                      href={link.href} 
-                      target="_blank" 
-                      className="text-[13px] font-bold text-zinc-500 transition-all duration-300 hover:text-emerald-600 hover:translate-x-1 inline-block"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </nav>
-              </div>
-            ) : null}
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              Never Miss a Deal Again.
+            </h3>
+            <p className="mt-2 text-sm text-white/45 max-w-md">
+              Join 126k+ smart shoppers getting daily verified coupons, flash drops, and brand highlights.
+            </p>
           </div>
 
-          {/* Right Section: Join Newsletter Card */}
-          <div className="flex flex-col lg:items-end">
-            <h4 className="text-[14px] font-black uppercase tracking-[0.2em] text-zinc-800">
-              Join the Elite
-            </h4>
-            <p className="mt-3.5 max-w-sm text-xs leading-relaxed text-zinc-400 lg:text-right">
-              Subscribe for updates, featured drops, and store highlights.
-            </p>
-            
-            <div className="mt-8 flex w-full max-w-md flex-col gap-3.5 sm:flex-row sm:items-center">
-              <div className="group relative flex-1">
-                <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-emerald-600 transition-colors pointer-events-none z-10" />
-                <input
-                  type="email"
-                  placeholder="name@persuekey.com"
-                  className="h-14 w-full rounded-2xl border border-zinc-250 bg-white pl-11 pr-5 text-sm text-zinc-950 outline-none transition-all placeholder:text-zinc-400 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/5"
-                />
-              </div>
-              <Button 
-                type="button" 
-                className="group h-14 gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 px-8 text-[11px] font-black uppercase tracking-[0.2em] text-white transition-all shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/20 hover:scale-[1.03] active:scale-97"
-              >
-                Join Now
-                <ArrowIcon />
-              </Button>
+          <form className="flex w-full max-w-md flex-col sm:flex-row items-center gap-3">
+            <div className="relative flex-1 w-full">
+              <svg viewBox="0 0 24 24" className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                className="h-13 w-full rounded-2xl border border-white/10 bg-white/8 pl-11 pr-4 text-sm text-white outline-none placeholder:text-white/30 transition focus:border-emerald-500/50 focus:bg-white/12 focus:ring-2 focus:ring-emerald-500/20"
+              />
             </div>
+            <button
+              type="button"
+              className="group h-13 flex-shrink-0 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-7 text-[11px] font-black uppercase tracking-[0.18em] text-black shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 hover:shadow-emerald-500/35 active:scale-98"
+            >
+              Subscribe
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* Main Link Grid */}
+      <div className="mx-auto max-w-[1400px] px-6 lg:px-10 py-16">
+        <div className="grid gap-12 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+
+          {/* Brand Column */}
+          <div className="flex flex-col gap-6">
+            {/* Logo */}
+            <Link href="/" className="relative inline-flex w-fit items-center rounded-xl bg-emerald-600 px-4 py-2 overflow-hidden shadow-lg shadow-emerald-600/30">
+              <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/30" />
+              <span className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/30" />
+              <span className="text-[1.5rem] font-black italic leading-none tracking-[-0.07em] text-white px-1">Persuekey</span>
+            </Link>
+
+            <p className="text-sm leading-relaxed text-white/40 max-w-xs">
+              Your one-stop destination for verified coupons, exclusive deals, and trusted store partnerships — updated daily.
+            </p>
+
+            {/* Social Icons */}
+            {socialLinks.length > 0 && (
+              <div className="flex items-center gap-2">
+                {socialLinks.map((s) => (
+                  <Link
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={s.label}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/50 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/15 hover:text-emerald-400"
+                  >
+                    {socialIcons[s.label]}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Top Categories */}
+          <div>
+            <h4 className="mb-5 text-[10px] font-black uppercase tracking-[0.25em] text-white/30">Top Categories</h4>
+            <nav className="flex flex-col gap-2.5">
+              {topCategories.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="group inline-flex items-center gap-2 text-[13px] font-semibold text-white/55 transition-all hover:text-emerald-400"
+                >
+                  <span className="h-px w-3 bg-white/20 transition-all group-hover:w-5 group-hover:bg-emerald-400" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Top Stores */}
+          <div>
+            <h4 className="mb-5 text-[10px] font-black uppercase tracking-[0.25em] text-white/30">Top Stores</h4>
+            <nav className="flex flex-col gap-2.5">
+              {topStores.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="group inline-flex items-center gap-2 text-[13px] font-semibold text-white/55 transition-all hover:text-emerald-400"
+                >
+                  <span className="h-px w-3 bg-white/20 transition-all group-hover:w-5 group-hover:bg-emerald-400" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h4 className="mb-5 text-[10px] font-black uppercase tracking-[0.25em] text-white/30">Quick Links</h4>
+            <nav className="flex flex-col gap-2.5">
+              {quickLinks.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="group inline-flex items-center gap-2 text-[13px] font-semibold text-white/55 transition-all hover:text-emerald-400"
+                >
+                  <span className="h-px w-3 bg-white/20 transition-all group-hover:w-5 group-hover:bg-emerald-400" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Section */}
-        <div className="mt-12 flex flex-col gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 sm:flex-row sm:items-center sm:justify-between font-mono">
-          <div className="flex items-center gap-4">
-            <p>{`© 2026 ${settings.siteName}`}</p>
-            <span className="text-zinc-250">|</span>
-            <span className="text-[9px] text-zinc-450 border border-zinc-200 bg-zinc-100 px-2 py-0.5 rounded tracking-wider leading-none">
-              🔒 SSL SECURED
+      {/* Bottom Bar */}
+      <div className="border-t border-white/8">
+        <div className="mx-auto max-w-[1400px] px-6 lg:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-white/25">
+              © {year} {settings.siteName}
             </span>
+            <span className="text-white/15">·</span>
+            <Link href="/privacy" className="text-[11px] font-semibold text-white/30 uppercase tracking-wider hover:text-emerald-400 transition-colors">Privacy</Link>
+            <span className="text-white/15">·</span>
+            <Link href="/terms" className="text-[11px] font-semibold text-white/30 uppercase tracking-wider hover:text-emerald-400 transition-colors">Terms</Link>
+            <span className="text-white/15">·</span>
+            <Link href="/cookies" className="text-[11px] font-semibold text-white/30 uppercase tracking-wider hover:text-emerald-400 transition-colors">Cookies</Link>
+            <span className="text-white/15">·</span>
+            <Link href="/imprint" className="text-[11px] font-semibold text-white/30 uppercase tracking-wider hover:text-emerald-400 transition-colors">Imprint</Link>
           </div>
-          <a 
-            href={`mailto:${settings.supportEmail}`} 
-            className="hover:text-emerald-600 transition-colors lowercase tracking-normal"
+
+          <a
+            href={`mailto:${settings.supportEmail}`}
+            className="text-[11px] font-semibold lowercase tracking-wide text-white/30 transition-colors hover:text-emerald-400"
           >
             {settings.supportEmail}
           </a>

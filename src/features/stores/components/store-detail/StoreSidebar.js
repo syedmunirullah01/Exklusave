@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { buildCountryPath } from "@/lib/countries";
+
 
 function ExternalLinkIcon({ className = "h-3.5 w-3.5" }) {
   return (
@@ -116,7 +116,7 @@ export default function StoreSidebar({ singleStore, relatedStores = [] }) {
             {relatedStores.slice(0, 6).map((store) => (
               <Link
                 key={store.name || store.slug}
-                href={buildCountryPath(`/stores/${store.categorySlug || 'general'}/${store.slug}`, singleStore.countryCode)}
+                href={`/stores/${store.categorySlug || 'general'}/${store.slug}`}
                 className="group/item flex flex-col items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-black/8 bg-zinc-50/80 p-2 transition-all duration-200 hover:scale-105 hover:bg-white hover:border-emerald-500/40 hover:shadow-md"
                 title={store.name}
               >

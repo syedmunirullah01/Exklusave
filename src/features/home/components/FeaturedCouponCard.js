@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 function GroupIcon() {
@@ -30,13 +33,14 @@ function TagIcon() {
 }
 
 export default function FeaturedCouponCard({ coupon }) {
+  const [imgError, setImgError] = useState(false);
   const isCode = coupon.tag?.toUpperCase() === "CODE";
 
   return (
     <article className="group flex flex-col bg-white rounded-2xl border border-zinc-200 overflow-hidden hover:-translate-y-1 hover:shadow-md transition-all duration-300 min-h-[310px]">
       
-      {/* Top Section: Lilac Grey background with Store Logo */}
-      <div className="relative h-32 w-full bg-zinc-50/70 border-b border-zinc-100 flex items-center justify-center overflow-hidden">
+      {/* Top Section: Header background with Auto-Fit Brand Logo Box */}
+      <div className="relative h-32 w-full bg-zinc-50/70 border-b border-zinc-100 flex items-center justify-center overflow-hidden p-3">
         
         {/* Top-Right Decorative Curve Circle */}
         <span className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-zinc-200/25 pointer-events-none" />
@@ -44,7 +48,7 @@ export default function FeaturedCouponCard({ coupon }) {
         {/* Badge: Code or Deal */}
         <span 
           className={cn(
-            "absolute top-3 left-3 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider text-white",
+            "absolute top-3 left-3 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider text-white z-10",
             isCode ? "bg-emerald-600/90" : "bg-zinc-800"
           )}
         >
@@ -52,23 +56,26 @@ export default function FeaturedCouponCard({ coupon }) {
         </span>
 
         {/* Clicks Used count Pill */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-1 border border-zinc-200 bg-white rounded px-1.5 py-0.5 text-[9px] font-bold text-zinc-500 shadow-sm leading-none">
+        <div className="absolute bottom-3 left-3 flex items-center gap-1 border border-zinc-200 bg-white rounded px-1.5 py-0.5 text-[9px] font-bold text-zinc-500 shadow-xs leading-none z-10">
           <GroupIcon />
           <span>{coupon.clicksCount || 101} Used</span>
         </div>
 
-        {/* Store Logo display */}
-        {coupon.logoImage ? (
-          <img 
-            src={coupon.logoImage} 
-            alt={coupon.brand} 
-            className="max-h-[50px] max-w-[130px] object-contain p-1"
-          />
-        ) : (
-          <div className="h-11 w-11 rounded-xl bg-zinc-200/60 flex items-center justify-center font-black text-zinc-400 text-sm shadow-inner uppercase">
-            {coupon.logoText}
-          </div>
-        )}
+        {/* Prominent Auto-Fit Store Logo Box */}
+        <div className="relative z-0 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center overflow-hidden rounded-2xl border border-black/8 bg-white p-1 shadow-xs group-hover:scale-105 transition-transform">
+          {coupon.logoImage && !imgError ? (
+            <img 
+              src={coupon.logoImage} 
+              alt={coupon.brand || coupon.title} 
+              onError={() => setImgError(true)}
+              className="w-full h-full object-contain p-0.5" 
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br from-zinc-800 to-black text-white font-black text-sm uppercase">
+              <span>{coupon.logoText || coupon.brand?.charAt(0) || "P"}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bottom Section: Texts & CTA Button */}

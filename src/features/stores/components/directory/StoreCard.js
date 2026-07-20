@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -21,6 +24,7 @@ function VerifiedCheckIcon({ className = "h-3.5 w-3.5" }) {
 }
 
 export default function StoreCard({ store }) {
+  const [imgError, setImgError] = useState(false);
   const storeHref = `/stores/${store.categorySlug || 'general'}/${store.slug}`;
 
   return (
@@ -42,10 +46,17 @@ export default function StoreCard({ store }) {
 
       {/* Brand Logo & Name */}
       <div className="my-6 text-center">
-        {store.logoImage ? (
-          <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-black/8 bg-zinc-50 p-3 shadow-inner group-hover:scale-105 transition-transform duration-300">
+        {store.logoImage && !imgError ? (
+          <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-black/8 bg-white p-1 shadow-xs group-hover:scale-105 transition-transform duration-300">
             <div className="relative h-full w-full">
-              <Image src={store.logoImage} alt={`${store.name} logo`} fill className="object-contain" unoptimized />
+              <Image 
+                src={store.logoImage} 
+                alt={`${store.name} logo`} 
+                fill 
+                className="object-contain p-0.5" 
+                unoptimized 
+                onError={() => setImgError(true)}
+              />
             </div>
           </div>
         ) : (

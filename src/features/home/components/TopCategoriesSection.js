@@ -172,12 +172,12 @@ export default function TopCategoriesSection() {
               className="flex-shrink-0 flex flex-col items-center px-3 group"
               style={{ width: `${100 / visibleItems}%` }}
             >
-              {/* Circular category icon wrapper */}
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[#f4f5f6] flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-md cursor-pointer border border-zinc-200/50">
+              {/* Circular category icon wrapper - Edge to Edge Image */}
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-100 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-md cursor-pointer border border-black/8 shadow-xs">
                 <img 
                   src={cat.image} 
                   alt={cat.name} 
-                  className="w-[70%] h-[70%] object-contain rounded-full bg-transparent"
+                  className="w-full h-full object-cover rounded-full"
                 />
               </div>
 
