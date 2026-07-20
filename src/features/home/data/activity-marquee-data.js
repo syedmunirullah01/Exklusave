@@ -21,7 +21,7 @@ export const activityMarqueeItems = [
     code: "SOUND24",
     statusLabel: "Pending review",
     statusTone: "muted",
-    actor: "EXKLUSAVE TEAM",
+    actor: "PERSUEKEY TEAM",
   },
   {
     store: "Hostinger",
@@ -37,7 +37,7 @@ export const activityMarqueeItems = [
     code: "MOVEFAST",
     statusLabel: "Fresh update",
     statusTone: "warning",
-    actor: "EXKLUSAVE LAB",
+    actor: "PERSUEKEY LAB",
   },
   {
     store: "Sephora",

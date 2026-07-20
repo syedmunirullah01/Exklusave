@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 
 const initialState = {
   general: {
-    siteName: "Exklusave",
+    siteName: "Persuekey",
     tagline: "Smart shopping, better saving.",
-    supportEmail: "support@exklusave.com",
+    supportEmail: "support@persuekey.com",
     countries: SUPPORTED_COUNTRIES,
     customHeadScript: "",
     customBodyStartScript: "",
@@ -34,18 +34,18 @@ const initialState = {
     x: "",
     tiktok: "",
     youtube: "",
-    defaultShareText: "Verified coupons and deals from Exklusave.",
+    defaultShareText: "Verified coupons and deals from Persuekey.",
   },
   seo: {
-    titleTemplate: "%s | Exklusave",
+    titleTemplate: "%s | Persuekey",
     metaDescription: "Verified coupons, deals, and store offers updated daily.",
-    ogTitle: "Exklusave",
+    ogTitle: "Persuekey",
     ogDescription: "Discover verified coupons and deals for top stores.",
     robots: "index,follow",
     autoGenerateStoreMetadata: true,
     storeMetaTitleTemplate: "%store% %best_discount%% Off Discount & Coupon Codes %year%",
     storeMetaDescriptionTemplate:
-      "Save with %offers_count% verified %store% coupon codes and deals on Exklusave. Best current offer: %best_offer%. Updated for %year%.",
+      "Save with %offers_count% verified %store% coupon codes and deals on Persuekey. Best current offer: %best_offer%. Updated for %year%.",
   },
 };
 

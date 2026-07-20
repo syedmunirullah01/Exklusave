@@ -19,7 +19,7 @@ import {
 
 const PRIMARY_NAV = [
   { label: "Home", href: "/" },
-  { label: "Stores", href: "/stores" },
+  { label: "Stores", href: "/stores", badge: "HOT" },
   { label: "Categories", href: "/categories" },
   { label: "Blogs", href: "/blogs" },
   { label: "Contact", href: "/contact" },
@@ -74,7 +74,7 @@ function MenuIcon({ className = "h-5 w-5" }) {
 function BrandMark() {
   return (
     <Link href="/" className="inline-flex items-center rounded-[18px] bg-[var(--accent)] px-4 py-2.5 shadow-[0_18px_40px_rgba(163,230,53,0.16)]">
-      <span className="text-[1.8rem] font-black italic leading-none tracking-[-0.06em] text-black sm:text-[2rem]">Exklusave</span>
+      <span className="text-[1.8rem] font-black italic leading-none tracking-[-0.06em] text-black sm:text-[2rem]">Persuekey</span>
     </Link>
   );
 }
@@ -450,7 +450,7 @@ export default function Navbar() {
           <Link href={buildCountryPath("/", selectedCountryCode)} className="relative inline-flex items-center rounded-xl bg-[var(--accent)] px-4 py-1.5 shadow-[0_10px_20px_rgba(21,128,61,0.15)] overflow-hidden">
             <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white" />
             <span className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white" />
-            <span className="text-[1.4rem] font-black italic leading-none tracking-[-0.07em] text-white px-1">Exklusave</span>
+            <span className="text-[1.4rem] font-black italic leading-none tracking-[-0.07em] text-white px-1">Persuekey</span>
           </Link>
 
           <nav className="hidden items-center gap-6 lg:flex">
@@ -462,11 +462,17 @@ export default function Navbar() {
                   key={item.label}
                   href={buildCountryPath(item.href, selectedCountryCode)}
                   className={cn(
-                    "text-[0.88rem] font-semibold transition",
+                    "relative inline-flex items-center gap-1.5 text-[0.88rem] font-semibold transition group",
                     isActive ? "text-[var(--accent)] font-bold" : "text-zinc-600 hover:text-black"
                   )}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {item.badge ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 px-2 py-0.5 text-[8.5px] font-black uppercase tracking-[0.14em] text-white shadow-[0_2px_10px_rgba(225,29,72,0.4)] border border-white/25 -translate-y-1.5 transition-transform duration-200 group-hover:scale-105">
+                      <span className="flex h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+                      <span>{item.badge}</span>
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}
@@ -521,7 +527,7 @@ export default function Navbar() {
             <Link href={buildCountryPath("/", selectedCountryCode)} onClick={() => setMobileOpen(false)} className="relative inline-flex items-center rounded-xl bg-[var(--accent)] px-3.5 py-1.5 shadow-sm overflow-hidden">
               <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white" />
               <span className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white" />
-              <span className="text-[1.35rem] font-black italic leading-none tracking-[-0.07em] text-white px-1">Exklusave</span>
+              <span className="text-[1.35rem] font-black italic leading-none tracking-[-0.07em] text-white px-1">Persuekey</span>
             </Link>
              <div className="flex items-center gap-3 text-black">
                <button type="button" onClick={() => setMobileOpen(false)} className="inline-flex h-10 w-10 items-center justify-center">
@@ -549,14 +555,20 @@ export default function Navbar() {
                 href={buildCountryPath(item.href, selectedCountryCode)}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                  "block text-[1.05rem] font-semibold transition",
+                  "inline-flex items-center gap-2 text-[1.05rem] font-semibold transition",
                   (item.href === "/" && pathWithoutCountry === "/") ||
                     (item.href !== "/" && pathWithoutCountry.startsWith(item.href))
                     ? "text-[var(--accent)]"
                     : "text-zinc-600 hover:text-black"
                 )}
               >
-                {item.label}
+                <span>{item.label}</span>
+                {item.badge ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-[0_2px_10px_rgba(225,29,72,0.35)] border border-white/25">
+                    <span className="flex h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+                    <span>{item.badge}</span>
+                  </span>
+                ) : null}
               </Link>
             </div>
           ))}

@@ -2,7 +2,7 @@ import AdminTopbar from "@/features/admin/components/AdminTopbar";
 import AdminProductsManager from "@/features/admin/components/AdminProductsManager";
 
 export const metadata = {
-  title: "Products | Exklusave Admin",
+  title: "Products | Persuekey Admin",
 };
 
 export default function AdminProductsPage() {

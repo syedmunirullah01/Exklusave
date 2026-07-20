@@ -106,11 +106,12 @@ export default function AdminHeroManager() {
         {
           id: `hero-slide-${Date.now()}`,
           image: "",
-          badge: "New Slide",
-          kicker: "Live Now",
-          title: "New hero campaign",
-          description: "Add a supporting description for this homepage slide.",
-          discount: "-20%",
+          badge: "PROMO DEAL • LIVE NOW",
+          kicker: "SPECIAL OFFER",
+          title: "New Promo Campaign",
+          description: "Description of your promotional campaign.",
+          discount: "-30% OFF",
+          code: "DEAL30",
           accent: "linear-gradient(140deg, rgba(163,230,53,0.22), transparent 48%)",
         },
       ],
@@ -302,20 +303,23 @@ export default function AdminHeroManager() {
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
-                    <SectionField label="Image URL" hint="Right-side hero image for this slide.">
+                    <SectionField label="Banner Image URL" hint="Custom promotional banner background image URL.">
                       <Input value={slide.image || ""} onChange={(event) => updateHeroSlide(index, "image", event.target.value)} />
                     </SectionField>
-                    <SectionField label="Top Badge" hint="Small pill shown on top-left of the image.">
+                    <SectionField label="Top Badge" hint="Example: FLASH SALE • LIVE NOW">
                       <Input value={slide.badge || ""} onChange={(event) => updateHeroSlide(index, "badge", event.target.value)} />
                     </SectionField>
-                    <SectionField label="Small Label" hint="Small uppercase text above the slide title.">
+                    <SectionField label="Small Kicker Label" hint="Example: MAX SAVINGS or SPECIAL DEAL">
                       <Input value={slide.kicker || ""} onChange={(event) => updateHeroSlide(index, "kicker", event.target.value)} />
                     </SectionField>
-                    <SectionField label="Discount Tag" hint="Example: -35% or 20% OFF.">
+                    <SectionField label="Discount Tag" hint="Example: -50% OFF or $250 SAVINGS">
                       <Input value={slide.discount || ""} onChange={(event) => updateHeroSlide(index, "discount", event.target.value)} />
                     </SectionField>
+                    <SectionField label="Promo Code" hint="Master code to copy (e.g. NIKE50 or ZARA35)">
+                      <Input value={slide.code || ""} onChange={(event) => updateHeroSlide(index, "code", event.target.value)} />
+                    </SectionField>
                     <div className="md:col-span-2">
-                      <SectionField label="Slide Title">
+                      <SectionField label="Banner Title">
                         <Input value={slide.title || ""} onChange={(event) => updateHeroSlide(index, "title", event.target.value)} />
                       </SectionField>
                     </div>

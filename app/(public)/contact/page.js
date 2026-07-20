@@ -27,7 +27,7 @@ export default async function ContactPage() {
             <p className="mt-2 text-sm text-white/50">
               For promo codes, deals queries, or user account support.
             </p>
-            <p className="mt-4 text-base font-bold text-[var(--accent)]">{settings.supportEmail || "support@exklusave.com"}</p>
+            <p className="mt-4 text-base font-bold text-[var(--accent)]">{settings.supportEmail || "support@persuekey.com"}</p>
           </div>
 
           <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6">
@@ -35,7 +35,7 @@ export default async function ContactPage() {
             <p className="mt-2 text-sm text-white/50">
               For merchant listing requests, API integrations, and promo partnerships.
             </p>
-            <p className="mt-4 text-base font-bold text-[var(--accent)]">partners@exklusave.com</p>
+            <p className="mt-4 text-base font-bold text-[var(--accent)]">partners@persuekey.com</p>
           </div>
         </div>
 

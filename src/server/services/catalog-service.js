@@ -35,11 +35,11 @@ function buildStoreDetail(store, offers, allStores) {
   const fallbackFaqs = [
     {
       question: `How often are ${store.name} offers updated?`,
-      answer: "Offers update whenever admins create, edit, or remove records from the shared Exklusave catalog.",
+      answer: "Offers update whenever admins create, edit, or remove records from the shared Persuekey catalog.",
     },
     {
       question: `Are ${store.name} coupons verified?`,
-      answer: "Exklusave shows trust status for the store and keeps manual plus network offers in one moderation flow.",
+      answer: "Persuekey shows trust status for the store and keeps manual plus network offers in one moderation flow.",
     },
     {
       question: `Can I find both coupons and deals here?`,
@@ -56,17 +56,17 @@ function buildStoreDetail(store, offers, allStores) {
     singleStore: {
       ...store,
       title: `${store.name} Coupons, Deals & Promo Codes`,
-      partnerText: `${store.trustStatus} merchant in Exklusave catalog`,
+      partnerText: `${store.trustStatus} merchant in Persuekey catalog`,
       validatedText: `${offers.length} active offer${offers.length === 1 ? "" : "s"} currently available`,
       activeCoupons,
       activeDeals,
       introTitle: store.contentIntroTitle?.trim() || `More Information On ${store.name} Deals`,
       introParagraphs: [
-        store.contentIntroParagraph1?.trim() || `${store.name} is listed on Exklusave with curated savings and regularly reviewed offer coverage.`,
+        store.contentIntroParagraph1?.trim() || `${store.name} is listed on Persuekey with curated savings and regularly reviewed offer coverage.`,
         store.contentIntroParagraph2?.trim() || store.description,
       ],
       whyItems: customWhyItems.length ? customWhyItems : fallbackWhyItems,
-      outro: store.contentOutro?.trim() || `Exklusave keeps ${store.name} inventory synced from the same source used by the admin dashboard.`,
+      outro: store.contentOutro?.trim() || `Persuekey keeps ${store.name} inventory synced from the same source used by the admin dashboard.`,
     },
     storeTabs: ["Coupons", "Store Info", "FAQs"],
     offerTabs: [
@@ -143,7 +143,7 @@ function doesOfferMatchSearch(offer, query) {
 
 function buildStoreMetadataFallback(store, offers, counts, year) {
   const title = `${store.name} Coupon Codes & Deals ${year}`;
-  const description = `Save with ${offers.length} verified ${store.name} coupon codes and deals on Exklusave. Browse ${counts.coupons} coupons and ${counts.deals} deals updated for ${year}.`;
+  const description = `Save with ${offers.length} verified ${store.name} coupon codes and deals on Persuekey. Browse ${counts.coupons} coupons and ${counts.deals} deals updated for ${year}.`;
 
   return { title, description };
 }
@@ -187,7 +187,7 @@ function buildAutoStoreMetadata(settings, store, offers) {
     ),
     description: applyTemplate(
       settings.seo.storeMetaDescriptionTemplate,
-      `Save with ${counts.offers} verified ${store.name} coupon codes and deals on Exklusave. Best current offer: ${bestDiscountMatch.offer.title}. Updated for ${year}.`
+      `Save with ${counts.offers} verified ${store.name} coupon codes and deals on Persuekey. Best current offer: ${bestDiscountMatch.offer.title}. Updated for ${year}.`
     ),
   };
 }

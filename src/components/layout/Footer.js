@@ -123,7 +123,7 @@ export default async function Footer() {
                 <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-emerald-600 transition-colors pointer-events-none z-10" />
                 <input
                   type="email"
-                  placeholder="name@exklusave.com"
+                  placeholder="name@persuekey.com"
                   className="h-14 w-full rounded-2xl border border-zinc-250 bg-white pl-11 pr-5 text-sm text-zinc-950 outline-none transition-all placeholder:text-zinc-400 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/5"
                 />
               </div>

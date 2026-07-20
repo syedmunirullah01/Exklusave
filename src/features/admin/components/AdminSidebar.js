@@ -22,9 +22,7 @@ export default function AdminSidebar() {
     <aside className="w-full border-b border-[var(--border)] bg-[var(--surface)] lg:min-h-screen lg:w-72 lg:border-r lg:border-b-0">
       <div className="flex h-full flex-col px-4 py-6 sm:px-6">
         <div className="mb-8">
-          <Link href="/" className="inline-flex" aria-label="Go to homepage" target="_blank" rel="noopener noreferrer">
-            <Logo />
-          </Link>
+          <Logo />
           <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">Admin</p>
           <h1 className="mt-2 text-2xl font-semibold text-[var(--text)]">Dashboard</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">

@@ -44,7 +44,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2 text-[var(--text)]">Admin Console</h1>
           <p className="text-[var(--text-muted)] text-sm">
-            Sign in to manage Exklusave
+            Sign in to manage Persuekey
           </p>
         </div>
 
@@ -54,7 +54,7 @@ export default function LoginPage() {
             <Input
               type="email"
               required
-              placeholder="admin@exklusave.com"
+              placeholder="admin@persuekey.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}

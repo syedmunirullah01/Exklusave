@@ -2,7 +2,7 @@ import AdminTopbar from "@/features/admin/components/AdminTopbar";
 import AdminEventsManager from "@/features/admin/components/AdminEventsManager";
 
 export const metadata = {
-  title: "Events | Exklusave Admin",
+  title: "Events | Persuekey Admin",
 };
 
 export default function AdminEventsPage() {

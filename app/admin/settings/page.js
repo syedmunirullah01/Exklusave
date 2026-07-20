@@ -3,7 +3,7 @@ import AdminSettingsPanel from "@/features/admin/components/AdminSettingsPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 
 export const metadata = {
-  title: "Settings | Exklusave Admin",
+  title: "Settings | Persuekey Admin",
 };
 
 export default function AdminSettingsPage() {

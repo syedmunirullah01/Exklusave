@@ -2,7 +2,7 @@ import AdminTopbar from "@/features/admin/components/AdminTopbar";
 import AdminStoresManager from "@/features/admin/components/AdminStoresManager";
 
 export const metadata = {
-  title: "Stores | Exklusave Admin",
+  title: "Stores | Persuekey Admin",
 };
 
 export default function AdminStoresPage() {

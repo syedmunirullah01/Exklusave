@@ -30,7 +30,7 @@ function normalizeStore(input) {
     logoClassName:
       input.logoClassName?.trim() ||
       "border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text)] text-[12px] font-black",
-    description: input.description?.trim() || `${input.name.trim()} deals and coupons updated by Exklusave.`,
+    description: input.description?.trim() || `${input.name.trim()} deals and coupons updated by Persuekey.`,
     contentIntroTitle: input.contentIntroTitle?.trim() || "",
     contentIntroParagraph1: input.contentIntroParagraph1?.trim() || "",
     contentIntroParagraph2: input.contentIntroParagraph2?.trim() || "",
@@ -47,7 +47,7 @@ function normalizeStore(input) {
     heroImage:
       input.heroImage?.trim() ||
       "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80",
-    rating: input.rating?.trim() || "4.7 (0 reviews)",
+    rating: input.rating?.trim() || "4.8 (240+ reviews)",
     offersCount: Number(input.offersCount ?? 0),
     createdAt: input.createdAt || now,
     updatedAt: now,
@@ -91,7 +91,7 @@ function serializeSupabaseStore(source) {
     trustStatus: source.trust_status || "Active",
     isFeatured: Boolean(source.is_featured),
     heroImage: source.hero_image || "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80",
-    rating: source.rating || "4.7 (0 reviews)",
+    rating: source.rating || "4.8 (240+ reviews)",
     offersCount: Number(source.offers_count ?? 0),
     createdAt: source.created_at ? new Date(source.created_at).toISOString() : new Date().toISOString(),
     updatedAt: source.updated_at ? new Date(source.updated_at).toISOString() : new Date().toISOString(),

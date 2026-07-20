@@ -52,7 +52,7 @@ export default function FeaturedProductsSection({ featuredProducts, title = "Fea
                   <div className="space-y-2">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{product.storeName}</p>
                     <h3 className="text-2xl font-black tracking-[-0.04em] text-[var(--text)]">{product.title}</h3>
-                    <p className="line-clamp-3 text-sm leading-6 text-[var(--muted)]">{product.description || "Featured product curated from the Exklusave store catalog."}</p>
+                    <p className="line-clamp-3 text-sm leading-6 text-[var(--muted)]">{product.description || "Featured product curated from the Persuekey store catalog."}</p>
                   </div>
 
                   <div className="flex items-end gap-3">

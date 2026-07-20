@@ -36,7 +36,7 @@ export default function BlogsPage() {
   return (
     <div className="mx-auto w-full max-w-[1240px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <div className="mb-12">
-        <h1 className="text-5xl font-black uppercase tracking-[-0.05em] text-white sm:text-6xl">Exklusave Insights</h1>
+        <h1 className="text-5xl font-black uppercase tracking-[-0.05em] text-white sm:text-6xl">Persuekey Insights</h1>
         <div className="mt-4 h-1.5 w-20 rounded-full bg-[var(--accent)]" />
         <p className="mt-6 max-w-2xl text-base leading-7 text-white/50">
           Stay updated with smart shopping guides, retail tips, and seasonal deals analysis compiled by our desk.

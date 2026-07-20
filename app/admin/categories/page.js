@@ -2,7 +2,7 @@ import AdminTopbar from "@/features/admin/components/AdminTopbar";
 import AdminCategoriesManager from "@/features/admin/components/AdminCategoriesManager";
 
 export const metadata = {
-  title: "Categories | Exklusave Admin",
+  title: "Categories | Persuekey Admin",
 };
 
 export default function AdminCategoriesPage() {

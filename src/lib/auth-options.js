@@ -9,7 +9,7 @@ export const authOptions = {
     CredentialsProvider({
       name: "Admin Login",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "admin@exklusave.com" },
+        email: { label: "Email", type: "email", placeholder: "admin@persuekey.com" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {

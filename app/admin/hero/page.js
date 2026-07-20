@@ -3,7 +3,7 @@ import AdminHeroManager from "@/features/admin/components/AdminHeroManager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 
 export const metadata = {
-  title: "Hero | Exklusave Admin",
+  title: "Hero | Persuekey Admin",
 };
 
 export default function AdminHeroPage() {

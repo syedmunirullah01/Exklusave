@@ -308,7 +308,7 @@ export default function AdminUsersManager() {
                   type="email"
                   value={form.email}
                   onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                  placeholder="editor@exklusave.com"
+                  placeholder="editor@persuekey.com"
                   required
                 />
               </div>

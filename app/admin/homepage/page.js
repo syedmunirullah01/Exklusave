@@ -3,7 +3,7 @@ import AdminHomepageSectionsManager from "@/features/admin/components/AdminHomep
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 
 export const metadata = {
-  title: "Homepage | Exklusave Admin",
+  title: "Homepage | Persuekey Admin",
 };
 
 export default function AdminHomepagePage() {

@@ -1,4 +1,4 @@
-export const COUNTRY_COOKIE_KEY = "exklusave_country";
+export const COUNTRY_COOKIE_KEY = "persuekey_country";
 
 export const SUPPORTED_COUNTRIES = [
   { code: "US", name: "United States" },

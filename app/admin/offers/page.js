@@ -2,7 +2,7 @@ import AdminTopbar from "@/features/admin/components/AdminTopbar";
 import AdminOffersManager from "@/features/admin/components/AdminOffersManager";
 
 export const metadata = {
-  title: "Coupons & Deals | Exklusave Admin",
+  title: "Coupons & Deals | Persuekey Admin",
 };
 
 export default function AdminOffersPage() {

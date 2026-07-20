@@ -12,7 +12,7 @@ function normalizeOffer(input) {
   return {
     id: input.id || `offer_${storeSlug}_${Math.random().toString(36).slice(2, 10)}`,
     title: input.title.trim(),
-    description: input.description?.trim() || "Fresh offer imported into Exklusave.",
+    description: input.description?.trim() || "Fresh offer imported into Persuekey.",
     type: input.type?.trim() || "Coupon",
     storeSlug,
     storeName: input.storeName.trim(),
@@ -39,7 +39,7 @@ function serializeSupabaseOffer(source) {
   return {
     id: source.id || `offer_${source.store_slug}_${Math.random().toString(36).slice(2, 10)}`,
     title: source.title,
-    description: source.description || "Fresh offer imported into Exklusave.",
+    description: source.description || "Fresh offer imported into Persuekey.",
     type: source.type || "Coupon",
     storeSlug: source.store_slug,
     storeName: source.store_name,

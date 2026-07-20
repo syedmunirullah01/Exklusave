@@ -115,14 +115,14 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
   function downloadTemplate() {
     const csv = [
       TEMPLATE_HEADERS.join(","),
-      'Nike Store,nike-store,Fashion,US,"Editorial summary for the Nike page with at least twenty characters.",Active,https://example.com/track/nike,Nike,nike.png,More Information On Nike Deals,"Nike intro paragraph one.","Nike intro paragraph two.","Verified deals\\nCoupon codes\\nStore updates","Nike outro copy","How often are Nike offers updated?","Offers are reviewed regularly.","Are Nike deals verified?","Exklusave tracks trust signals.","Can I use both deals and coupons?","Yes, both can appear on the store page."',
+      'Nike Store,nike-store,Fashion,US,"Editorial summary for the Nike page with at least twenty characters.",Active,https://example.com/track/nike,Nike,nike.png,More Information On Nike Deals,"Nike intro paragraph one.","Nike intro paragraph two.","Verified deals\\nCoupon codes\\nStore updates","Nike outro copy","How often are Nike offers updated?","Offers are reviewed regularly.","Are Nike deals verified?","Persuekey tracks trust signals.","Can I use both deals and coupons?","Yes, both can appear on the store page."',
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "exklusave-store-template.csv";
+    link.download = "persuekey-store-template.csv";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

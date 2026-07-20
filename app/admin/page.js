@@ -6,7 +6,7 @@ import { getAllOffers } from "@/server/repositories/offers-repository";
 import { getAllStores } from "@/server/repositories/stores-repository";
 
 export const metadata = {
-  title: "Admin Dashboard | Exklusave",
+  title: "Admin Dashboard | Persuekey",
 };
 
 export const dynamic = "force-dynamic";

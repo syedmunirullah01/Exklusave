@@ -12,7 +12,7 @@ const REGIONS = [
   { code: "FR", label: "France", flag: "🇫🇷" },
 ];
 
-const STORAGE_KEY = "exklusave-region";
+const STORAGE_KEY = "persuekey-region";
 
 function ChevronIcon({ open }) {
   return (
