@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ConfirmModal } from "@/components/ui/AppModal";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
@@ -32,6 +33,10 @@ function RefreshIcon() {
 }
 
 export default function AdminOffersManager() {
+  const searchParams = useSearchParams();
+  const initialFilter = searchParams.get("filter") || "all";
+  const [filterTab, setFilterTab] = useState(initialFilter);
+
   const [offers, setOffers] = useState([]);
   const [stores, setStores] = useState([]);
   const [open, setOpen] = useState(false);
@@ -44,6 +49,13 @@ export default function AdminOffersManager() {
   const [selectedOfferIds, setSelectedOfferIds] = useState([]);
   const [error, setError] = useState("");
   const affiliateEditedRef = useRef(false);
+
+  useEffect(() => {
+    const filterFromUrl = searchParams.get("filter");
+    if (filterFromUrl) {
+      setFilterTab(filterFromUrl);
+    }
+  }, [searchParams]);
 
   async function loadData() {
     const [offersResponse, storesResponse] = await Promise.all([
@@ -169,7 +181,7 @@ export default function AdminOffersManager() {
   }
 
   function toggleSelectAll() {
-    setSelectedOfferIds((current) => (current.length === offers.length ? [] : offers.map((offer) => offer.id)));
+    setSelectedOfferIds((current) => (current.length === filteredOffers.length ? [] : filteredOffers.map((offer) => offer.id)));
   }
 
   async function handleDeleteConfirmed() {
@@ -200,6 +212,41 @@ export default function AdminOffersManager() {
     }, {});
   }, [stores]);
 
+  // Compute offer expiration status
+  const processedOffers = useMemo(() => {
+    const now = new Date();
+    return offers.map((offer) => {
+      let isExpired = offer.status === "Expired";
+      if (offer.expiryDate) {
+        const expiry = new Date(offer.expiryDate);
+        expiry.setHours(23, 59, 59, 999);
+        if (now > expiry) {
+          isExpired = true;
+        }
+      }
+      return {
+        ...offer,
+        isExpired,
+        displayStatus: isExpired ? "Expired" : (offer.status || "Active")
+      };
+    });
+  }, [offers]);
+
+  // Filtered view based on tab
+  const filteredOffers = useMemo(() => {
+    if (filterTab === "expired") {
+      return processedOffers.filter((o) => o.isExpired);
+    }
+    if (filterTab === "active") {
+      return processedOffers.filter((o) => !o.isExpired);
+    }
+    return processedOffers;
+  }, [processedOffers, filterTab]);
+
+  const expiredCount = useMemo(() => {
+    return processedOffers.filter((o) => o.isExpired).length;
+  }, [processedOffers]);
+
   return (
     <>
       <Card>
@@ -209,6 +256,31 @@ export default function AdminOffersManager() {
             <CardDescription>Manage verified promo codes, discount deals, and store offer coverage.</CardDescription>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            {/* Filter Tabs */}
+            <div className="flex items-center rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1 text-xs font-semibold border border-zinc-200 dark:border-zinc-700">
+              <button
+                type="button"
+                onClick={() => setFilterTab("all")}
+                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer ${filterTab === "all" ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-2xs" : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"}`}
+              >
+                All ({offers.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterTab("active")}
+                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer ${filterTab === "active" ? "bg-emerald-600 text-white shadow-2xs" : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"}`}
+              >
+                Active ({offers.length - expiredCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterTab("expired")}
+                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer ${filterTab === "expired" ? "bg-rose-600 text-white shadow-2xs" : "text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"}`}
+              >
+                Expired ({expiredCount})
+              </button>
+            </div>
+
             {selectedOfferIds.length ? (
               <Button type="button" variant="outline" className="rounded-xl dark:bg-zinc-800 dark:border-zinc-700 text-rose-600 dark:text-rose-400" onClick={() => setDeleteTarget({ id: "__bulk__", title: `${selectedOfferIds.length} selected offers` })}>
                 Delete Selected ({selectedOfferIds.length})
@@ -241,7 +313,7 @@ export default function AdminOffersManager() {
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-emerald-600 cursor-pointer"
-                      checked={offers.length > 0 && selectedOfferIds.length === offers.length}
+                      checked={filteredOffers.length > 0 && selectedOfferIds.length === filteredOffers.length}
                       onChange={toggleSelectAll}
                       aria-label="Select all offers"
                     />
@@ -257,19 +329,9 @@ export default function AdminOffersManager() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {offers.map((offer) => {
+              {filteredOffers.map((offer) => {
                 const storeLogo = storeLogoMap[offer.storeSlug];
-                
-                // Determine if it is expired based on date or status
-                let isExpired = offer.status === "Expired";
-                if (offer.expiryDate) {
-                  const expiry = new Date(offer.expiryDate);
-                  expiry.setHours(23, 59, 59, 999);
-                  if (new Date() > expiry) {
-                    isExpired = true;
-                  }
-                }
-                const displayStatus = isExpired ? "Expired" : (offer.status || "Active");
+                const displayStatus = offer.displayStatus;
 
                 return (
                   <TableRow key={offer.id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition border-b border-zinc-100 dark:border-zinc-800/60">
@@ -366,9 +428,9 @@ export default function AdminOffersManager() {
             </TableBody>
           </Table>
 
-          {!offers.length ? (
+          {!filteredOffers.length ? (
             <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 px-5 py-6 text-xs text-center text-zinc-500 dark:text-zinc-400">
-              No offers added yet. Use the button above to add coupons and deals.
+              {filterTab === "expired" ? "No expired offers found." : "No offers added yet. Use the button above to add coupons and deals."}
             </div>
           ) : null}
         </CardContent>

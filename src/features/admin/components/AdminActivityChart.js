@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef } from "react";
+import Link from "next/link";
 
 export default function AdminActivityChart({ offers = [] }) {
   const [timeRange, setTimeRange] = useState("7d");
@@ -69,6 +70,21 @@ export default function AdminActivityChart({ offers = [] }) {
 
     return days;
   }, [offers, timeRange]);
+
+  // Count offers that are expired today or marked expired
+  const expiredTodayCount = useMemo(() => {
+    const now = new Date();
+    return offers.filter((offer) => {
+      if (offer.status === "Expired") return true;
+      if (offer.expiryDate) {
+        const expDate = new Date(offer.expiryDate);
+        if (!isNaN(expDate.getTime()) && expDate < now) {
+          return true;
+        }
+      }
+      return false;
+    }).length;
+  }, [offers]);
 
   const displayDays = daysData.slice(-7);
   const activePoint = displayDays[hoveredIndex] || displayDays[displayDays.length - 1];
@@ -184,11 +200,16 @@ export default function AdminActivityChart({ offers = [] }) {
           <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">DB Synced</span>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 p-4 shadow-2xs transition hover:border-emerald-500/40">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Peak Activity Day</span>
-          <p className="text-xl font-black text-zinc-900 dark:text-white mt-1">{peakPoint.day} ({peakPoint.total})</p>
-          <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Highest volume</span>
-        </div>
+        <Link href="/admin/offers?filter=expired" className="block group">
+          <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 p-4 shadow-2xs transition group-hover:border-rose-500/60 group-hover:bg-rose-50/20 dark:group-hover:bg-rose-950/20 cursor-pointer">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">Expired Offers Today</span>
+              <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 opacity-0 group-hover:opacity-100 transition">View List →</span>
+            </div>
+            <p className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">{expiredTodayCount} Offers</p>
+            <span className="text-[11px] font-semibold text-rose-500 dark:text-rose-400">Click to view breakdown</span>
+          </div>
+        </Link>
 
         <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/50 p-4 shadow-2xs transition hover:border-emerald-500/40">
           <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Daily Average</span>
