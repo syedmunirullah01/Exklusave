@@ -11,6 +11,8 @@ import {
   removeCountryPrefix,
 } from "@/lib/countries";
 
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "persuekey-secret-key-2026";
+
 function isStaticAsset(pathname) {
   return pathname.startsWith("/_next") || pathname.startsWith("/api") || /\.[a-zA-Z0-9]+$/.test(pathname);
 }
@@ -23,7 +25,7 @@ export async function middleware(req) {
   const { pathname, search } = req.nextUrl;
 
   if (pathname.startsWith("/admin")) {
-    const token = await getToken({ req });
+    const token = await getToken({ req, secret: NEXTAUTH_SECRET });
 
     if (!token) {
       const redirectUrl = req.nextUrl.clone();
