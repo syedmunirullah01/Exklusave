@@ -2,78 +2,92 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import Logo from "@/components/shared/Logo";
-import { Button } from "@/components/ui/Button";
 import { PERMISSIONS, canAccessPermission, getPermissionsForRole } from "@/lib/access-control";
 import { cn } from "@/lib/utils";
+
+function LogOutIcon() {
+  return (
+    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H2.25" />
+    </svg>
+  );
+}
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const permissions = getPermissionsForRole(session?.user?.role, session?.user?.permissions);
   const items = PERMISSIONS.filter((item) => canAccessPermission(permissions, item.key));
-  const userName = session?.user?.name || (session?.user?.email ? session.user.email.split("@")[0] : "Admin");
+  const userName = session?.user?.name || (session?.user?.email ? session.user.email.split("@")[0] : "Admin User");
   const userInitial = userName?.charAt(0)?.toUpperCase() || "A";
-  const userRole = session?.user?.role || "admin";
+  const userRole = session?.user?.role || "Administrator";
 
   return (
-    <aside className="w-full border-b border-[var(--border)] bg-[var(--surface)] lg:min-h-screen lg:w-72 lg:border-r lg:border-b-0">
-      <div className="flex h-full flex-col px-4 py-6 sm:px-6">
-        <div className="mb-8">
-          <Logo />
-          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">Admin</p>
-          <h1 className="mt-2 text-2xl font-semibold text-[var(--text)]">Dashboard</h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            {session?.user?.name || session?.user?.email || "Signed in user"}
-          </p>
+    <aside className="w-full border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition-colors lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:border-r lg:border-b-0 lg:shrink-0 lg:overflow-y-auto z-40">
+      <div className="flex min-h-screen lg:h-full flex-col justify-between p-6">
+        
+        {/* Top Header & Navigation */}
+        <div className="space-y-7">
+          <div className="pb-4 border-b border-zinc-100 dark:border-zinc-800">
+            <Logo />
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+                ADMIN PANEL
+              </span>
+              <span className="text-[10px] font-semibold font-mono text-zinc-500 dark:text-zinc-400">v2.4</span>
+            </div>
+          </div>
+
+          {/* Navigation Items with Spacing Gaps */}
+          <nav className="space-y-2.5">
+            {items.map((item) => {
+              const isActive = pathname === item.href;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center justify-between rounded-xl px-4 py-3 text-xs font-bold transition-all duration-150 border",
+                    isActive
+                      ? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
+                      : "border-zinc-200/60 dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-800/40 text-zinc-800 dark:text-zinc-200 hover:border-emerald-500/40 hover:bg-zinc-100/80 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white"
+                  )}
+                >
+                  <span>{item.label}</span>
+                  {isActive && <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
-        <nav className="grid gap-2">
-          {items.map((item) => {
-            const isActive = pathname === item.href;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "rounded-2xl border px-4 py-3 text-sm font-medium transition",
-                  isActive
-                    ? "border-[var(--color-primary)] bg-[var(--surface-soft)] text-[var(--text)]"
-                    : "border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]"
-                )}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="mt-auto pt-8">
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-3">
+        {/* Bottom Pinned User Profile & Logout Box */}
+        <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 mt-6">
+          <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/60 p-3.5 shadow-2xs">
             <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-sm font-semibold text-[var(--text)]">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-600 font-extrabold text-white text-xs shadow-2xs">
                 {userInitial}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-[var(--text)]">{userName}</p>
-                <p className="truncate text-xs capitalize text-[var(--muted)]">{userRole}</p>
+                <p className="truncate text-xs font-bold text-zinc-900 dark:text-white leading-tight">{userName}</p>
+                <p className="truncate text-[10.5px] font-medium capitalize text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">{userRole}</p>
               </div>
             </div>
 
-            <Button
+            <button
               type="button"
-              variant="secondary"
-              size="md"
-              className="mt-3 w-full justify-center"
               onClick={() => signOut({ callbackUrl: "/login" })}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 dark:bg-zinc-700 hover:bg-rose-600 dark:hover:bg-rose-600 py-2.5 px-3 text-xs font-semibold text-white shadow-xs transition-colors duration-150 cursor-pointer"
             >
-              Sign Out
-            </Button>
+              <LogOutIcon />
+              <span>Sign Out</span>
+            </button>
           </div>
         </div>
+
       </div>
     </aside>
   );

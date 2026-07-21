@@ -3,22 +3,31 @@
 import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
 const initialState = {
+  marquee: {
+    enabled: true,
+    text: "🔥 Neeman's Extra 10% Off | Vijay Sales Tech Deals | Nykaa Hot Pink Sale | Ajio Fashion Sale",
+    speed: "normal",
+  },
   trendingStores: {
     title: "Trending Stores",
     selectedStoreSlugs: [],
-    limit: 15,
+    limit: 14,
   },
   featuredCoupons: {
     title: "Featured Coupons",
     selectedOfferIds: [],
     limit: 4,
   },
+  topCategories: {
+    title: "Top Categories",
+    selectedCategorySlugs: [],
+    limit: 8,
+  },
   featuredProducts: {
-    title: "Featured Products",
+    title: "Top Selling Beauty Products",
     selectedProductIds: [],
     limit: 4,
   },
@@ -38,12 +47,21 @@ function Spinner() {
   );
 }
 
-function SettingsSection({ title, description, children }) {
+function SectionCard({ title, badge, description, children }) {
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)]/35 p-4 sm:p-5">
-      <div className="mb-4">
-        <p className="text-sm font-semibold text-[var(--text)]">{title}</p>
-        {description ? <p className="mt-1 text-xs text-[var(--muted)]">{description}</p> : null}
+    <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-xs transition hover:border-zinc-300 dark:hover:border-zinc-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-4 mb-5">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white">{title}</h3>
+            {badge && (
+              <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase">
+                {badge}
+              </span>
+            )}
+          </div>
+          {description && <p className="text-xs text-zinc-700 dark:text-zinc-400 mt-1 font-medium">{description}</p>}
+        </div>
       </div>
       {children}
     </div>
@@ -55,11 +73,7 @@ function StoreSelectionList({ stores, selectedStoreSlugs, onToggle, searchValue,
 
   const filteredStores = useMemo(() => {
     const normalizedQuery = deferredSearchValue.trim().toLowerCase();
-
-    if (!normalizedQuery) {
-      return stores;
-    }
-
+    if (!normalizedQuery) return stores;
     return stores.filter((store) => {
       const fields = [store.name, store.slug, store.category, store.description];
       return fields.some((field) => String(field || "").toLowerCase().includes(normalizedQuery));
@@ -70,14 +84,19 @@ function StoreSelectionList({ stores, selectedStoreSlugs, onToggle, searchValue,
   const hasMore = visibleStores.length < filteredStores.length;
 
   return (
-    <div className="grid gap-4">
-      <label className="grid gap-2 text-sm text-[var(--muted)]">
-        <span className="font-medium text-[var(--text)]">Search Stores</span>
-        <Input value={searchValue} onChange={onSearchChange} placeholder="Search by name, slug, category, or description" />
-      </label>
+    <div className="grid gap-3">
+      <div className="grid gap-1.5 text-xs text-zinc-500">
+        <span className="font-semibold text-zinc-700 dark:text-zinc-300">Filter Stores Catalog</span>
+        <Input
+          value={searchValue}
+          onChange={onSearchChange}
+          placeholder="Search store by name, category, or description..."
+          className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
+        />
+      </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-        <div className="grid grid-cols-[auto_minmax(0,1.4fr)_minmax(0,0.8fr)_90px] gap-3 border-b border-[var(--border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <div className="grid grid-cols-[auto_minmax(0,1.4fr)_minmax(0,0.8fr)_90px] gap-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/80 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
           <span>Select</span>
           <span>Store</span>
           <span>Category</span>
@@ -88,36 +107,34 @@ function StoreSelectionList({ stores, selectedStoreSlugs, onToggle, searchValue,
           visibleStores.map((store) => (
             <label
               key={store.slug}
-              className="grid cursor-pointer grid-cols-[auto_minmax(0,1.4fr)_minmax(0,0.8fr)_90px] gap-3 border-b border-[var(--border)] px-4 py-3 transition last:border-b-0 hover:bg-[var(--surface-soft)]"
+              className="grid cursor-pointer grid-cols-[auto_minmax(0,1.4fr)_minmax(0,0.8fr)_90px] gap-3 border-b border-zinc-100 dark:border-zinc-800/60 px-4 py-3 transition last:border-b-0 hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40"
             >
               <input
                 type="checkbox"
                 checked={selectedStoreSlugs.includes(store.slug)}
                 onChange={() => onToggle(store.slug)}
-                className="mt-1 h-4 w-4 rounded border border-[var(--border)] bg-[var(--surface-soft)] accent-[var(--color-primary)]"
+                className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-emerald-600 cursor-pointer"
               />
               <div className="min-w-0">
-                <p className="truncate font-medium text-[var(--text)]">{store.name}</p>
-                <p className="truncate text-sm text-[var(--muted)]">{store.description || store.slug}</p>
+                <p className="truncate font-semibold text-zinc-900 dark:text-white text-xs">{store.name}</p>
+                <p className="truncate text-[11px] text-zinc-500 dark:text-zinc-400">{store.description || store.slug}</p>
               </div>
-              <p className="truncate text-sm text-[var(--muted)]">{store.category || "-"}</p>
-              <p className="text-sm font-medium text-[var(--color-primary)]">{store.offersCount || 0}</p>
+              <p className="truncate text-xs text-zinc-700 dark:text-zinc-300">{store.category || "-"}</p>
+              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{store.offersCount || 0} offers</p>
             </label>
           ))
         ) : (
-          <div className="px-4 py-6 text-sm text-[var(--muted)]">No stores matched your search.</div>
+          <div className="px-4 py-6 text-xs text-zinc-500 dark:text-zinc-400">No stores matched your search.</div>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
-        <span>
-          Showing {visibleStores.length} of {filteredStores.length} stores
-        </span>
-        {hasMore ? (
-          <Button type="button" variant="outline" size="sm" onClick={onLoadMore}>
+      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+        <span>Showing {visibleStores.length} of {filteredStores.length} stores</span>
+        {hasMore && (
+          <Button type="button" variant="outline" size="sm" onClick={onLoadMore} className="dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
             Load More
           </Button>
-        ) : null}
+        )}
       </div>
     </div>
   );
@@ -128,11 +145,7 @@ function OfferSelectionList({ offers, selectedOfferIds, onToggle, searchValue, o
 
   const filteredOffers = useMemo(() => {
     const normalizedQuery = deferredSearchValue.trim().toLowerCase();
-
-    if (!normalizedQuery) {
-      return offers;
-    }
-
+    if (!normalizedQuery) return offers;
     return offers.filter((offer) => {
       const fields = [offer.title, offer.storeName, offer.type, offer.code, offer.description];
       return fields.some((field) => String(field || "").toLowerCase().includes(normalizedQuery));
@@ -143,16 +156,21 @@ function OfferSelectionList({ offers, selectedOfferIds, onToggle, searchValue, o
   const hasMore = visibleOffers.length < filteredOffers.length;
 
   return (
-    <div className="grid gap-4">
-      <label className="grid gap-2 text-sm text-[var(--muted)]">
-        <span className="font-medium text-[var(--text)]">Search Coupons</span>
-        <Input value={searchValue} onChange={onSearchChange} placeholder="Search by title, store, type, code, or description" />
-      </label>
+    <div className="grid gap-3">
+      <div className="grid gap-1.5 text-xs text-zinc-500">
+        <span className="font-semibold text-zinc-700 dark:text-zinc-300">Filter Coupons & Deals</span>
+        <Input
+          value={searchValue}
+          onChange={onSearchChange}
+          placeholder="Search coupon by title, store, code, or type..."
+          className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
+        />
+      </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-        <div className="grid grid-cols-[auto_minmax(0,1.4fr)_minmax(0,0.9fr)_120px] gap-3 border-b border-[var(--border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <div className="grid grid-cols-[auto_minmax(0,1.4fr)_minmax(0,0.9fr)_100px] gap-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/80 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
           <span>Select</span>
-          <span>Coupon</span>
+          <span>Coupon Title</span>
           <span>Store</span>
           <span>Type</span>
         </div>
@@ -161,36 +179,36 @@ function OfferSelectionList({ offers, selectedOfferIds, onToggle, searchValue, o
           visibleOffers.map((offer) => (
             <label
               key={offer.id}
-              className="grid cursor-pointer grid-cols-[auto_minmax(0,1.4fr)_minmax(0,0.9fr)_120px] gap-3 border-b border-[var(--border)] px-4 py-3 transition last:border-b-0 hover:bg-[var(--surface-soft)]"
+              className="grid cursor-pointer grid-cols-[auto_minmax(0,1.4fr)_minmax(0,0.9fr)_100px] gap-3 border-b border-zinc-100 dark:border-zinc-800/60 px-4 py-3 transition last:border-b-0 hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40"
             >
               <input
                 type="checkbox"
                 checked={selectedOfferIds.includes(offer.id)}
                 onChange={() => onToggle(offer.id)}
-                className="mt-1 h-4 w-4 rounded border border-[var(--border)] bg-[var(--surface-soft)] accent-[var(--color-primary)]"
+                className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-emerald-600 cursor-pointer"
               />
               <div className="min-w-0">
-                <p className="truncate font-medium text-[var(--text)]">{offer.title}</p>
-                <p className="truncate text-sm text-[var(--muted)]">{offer.code || offer.ctaLabel || offer.description}</p>
+                <p className="truncate font-semibold text-zinc-900 dark:text-white text-xs">{offer.title}</p>
+                <p className="truncate text-[11px] font-mono text-emerald-700 dark:text-emerald-400">{offer.code || "DEAL-ACTIVATED"}</p>
               </div>
-              <p className="truncate text-sm text-[var(--muted)]">{offer.storeName || "-"}</p>
-              <p className="truncate text-sm font-medium text-[var(--color-primary)]">{offer.type || "-"}</p>
+              <p className="truncate text-xs text-zinc-700 dark:text-zinc-300">{offer.storeName || "-"}</p>
+              <span className={`inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase text-center ${offer.type === 'Coupon' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' : 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300'}`}>
+                {offer.type || "Deal"}
+              </span>
             </label>
           ))
         ) : (
-          <div className="px-4 py-6 text-sm text-[var(--muted)]">No coupons matched your search.</div>
+          <div className="px-4 py-6 text-xs text-zinc-500 dark:text-zinc-400">No coupons matched your search.</div>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
-        <span>
-          Showing {visibleOffers.length} of {filteredOffers.length} coupons
-        </span>
-        {hasMore ? (
-          <Button type="button" variant="outline" size="sm" onClick={onLoadMore}>
+      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+        <span>Showing {visibleOffers.length} of {filteredOffers.length} offers</span>
+        {hasMore && (
+          <Button type="button" variant="outline" size="sm" onClick={onLoadMore} className="dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
             Load More
           </Button>
-        ) : null}
+        )}
       </div>
     </div>
   );
@@ -201,11 +219,7 @@ function ProductSelectionList({ products, selectedProductIds, onToggle, searchVa
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = deferredSearchValue.trim().toLowerCase();
-
-    if (!normalizedQuery) {
-      return products;
-    }
-
+    if (!normalizedQuery) return products;
     return products.filter((product) => {
       const fields = [product.title, product.storeName, product.status, product.description];
       return fields.some((field) => String(field || "").toLowerCase().includes(normalizedQuery));
@@ -216,16 +230,21 @@ function ProductSelectionList({ products, selectedProductIds, onToggle, searchVa
   const hasMore = visibleProducts.length < filteredProducts.length;
 
   return (
-    <div className="grid gap-4">
-      <label className="grid gap-2 text-sm text-[var(--muted)]">
-        <span className="font-medium text-[var(--text)]">Search Products</span>
-        <Input value={searchValue} onChange={onSearchChange} placeholder="Search by title, store, status, or description" />
-      </label>
+    <div className="grid gap-3">
+      <div className="grid gap-1.5 text-xs text-zinc-500">
+        <span className="font-semibold text-zinc-700 dark:text-zinc-300">Filter Featured Products</span>
+        <Input
+          value={searchValue}
+          onChange={onSearchChange}
+          placeholder="Search product by title, store, or price..."
+          className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
+        />
+      </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-        <div className="hidden grid-cols-[auto_minmax(0,1.5fr)_minmax(0,0.8fr)_110px] gap-3 border-b border-[var(--border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)] md:grid">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <div className="grid grid-cols-[auto_minmax(0,1.5fr)_minmax(0,0.8fr)_100px] gap-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/80 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
           <span>Select</span>
-          <span>Product</span>
+          <span>Product Title</span>
           <span>Store</span>
           <span>Price</span>
         </div>
@@ -234,47 +253,34 @@ function ProductSelectionList({ products, selectedProductIds, onToggle, searchVa
           visibleProducts.map((product) => (
             <label
               key={product.id}
-              className="flex cursor-pointer gap-4 border-b border-[var(--border)] px-4 py-4 transition last:border-b-0 hover:bg-[var(--surface-soft)] md:grid md:grid-cols-[auto_minmax(0,1.5fr)_minmax(0,0.8fr)_110px] md:items-start md:gap-3 md:py-3"
+              className="grid cursor-pointer grid-cols-[auto_minmax(0,1.5fr)_minmax(0,0.8fr)_100px] gap-3 border-b border-zinc-100 dark:border-zinc-800/60 px-4 py-3 transition last:border-b-0 hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40"
             >
               <input
                 type="checkbox"
                 checked={selectedProductIds.includes(product.id)}
                 onChange={() => onToggle(product.id)}
-                className="mt-1 h-4 w-4 shrink-0 rounded border border-[var(--border)] bg-[var(--surface-soft)] accent-[var(--color-primary)]"
+                className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-emerald-600 cursor-pointer"
               />
-              <div className="min-w-0 flex-1 md:flex-none">
-                <div className="flex min-w-0 items-start justify-between gap-3 md:block">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-[var(--text)]">{product.title}</p>
-                    <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)] md:truncate">
-                      {product.description || product.status || "Product"}
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-sm font-medium text-[var(--color-primary)] md:hidden">${product.price ?? 0}</p>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--muted)] md:hidden">
-                  <span className="rounded-full border border-[var(--border)] px-2 py-1">{product.storeName || "Unknown store"}</span>
-                  <span className="rounded-full border border-[var(--border)] px-2 py-1">{product.status || "Active"}</span>
-                </div>
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-zinc-900 dark:text-white text-xs">{product.title}</p>
+                <p className="truncate text-[11px] text-zinc-500 dark:text-zinc-400">{product.description || "Beauty Item"}</p>
               </div>
-              <p className="hidden truncate text-sm text-[var(--muted)] md:block">{product.storeName || "-"}</p>
-              <p className="hidden truncate text-sm font-medium text-[var(--color-primary)] md:block">${product.price ?? 0}</p>
+              <p className="truncate text-xs text-zinc-700 dark:text-zinc-300">{product.storeName || "-"}</p>
+              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">${product.price ?? 0}</p>
             </label>
           ))
         ) : (
-          <div className="px-4 py-6 text-sm text-[var(--muted)]">No products matched your search.</div>
+          <div className="px-4 py-6 text-xs text-zinc-500 dark:text-zinc-400">No products matched your search.</div>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
-        <span>
-          Showing {visibleProducts.length} of {filteredProducts.length} products
-        </span>
-        {hasMore ? (
-          <Button type="button" variant="outline" size="sm" onClick={onLoadMore}>
+      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+        <span>Showing {visibleProducts.length} of {filteredProducts.length} products</span>
+        {hasMore && (
+          <Button type="button" variant="outline" size="sm" onClick={onLoadMore} className="dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
             Load More
           </Button>
-        ) : null}
+        )}
       </div>
     </div>
   );
@@ -285,14 +291,17 @@ export default function AdminHomepageSectionsManager() {
   const [stores, setStores] = useState([]);
   const [offers, setOffers] = useState([]);
   const [products, setProducts] = useState([]);
+
   const [trendingStoreSearch, setTrendingStoreSearch] = useState("");
   const [featuredOfferSearch, setFeaturedOfferSearch] = useState("");
   const [featuredProductSearch, setFeaturedProductSearch] = useState("");
   const [latestStoreSearch, setLatestStoreSearch] = useState("");
+
   const [trendingVisibleCount, setTrendingVisibleCount] = useState(10);
   const [featuredVisibleCount, setFeaturedVisibleCount] = useState(10);
   const [featuredProductVisibleCount, setFeaturedProductVisibleCount] = useState(10);
   const [latestVisibleCount, setLatestVisibleCount] = useState(10);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -315,12 +324,8 @@ export default function AdminHomepageSectionsManager() {
           productsResponse.json(),
         ]);
 
-        if (!sectionsResponse.ok) {
-          throw new Error(sectionsPayload.error || "Unable to load homepage sections.");
-        }
-
         if (active) {
-          setSections({ ...initialState, ...sectionsPayload.data });
+          setSections({ ...initialState, ...(sectionsPayload.data || {}) });
           setStores(storesPayload.data || []);
           setOffers(offersPayload.data || []);
           setProducts(productsPayload.data || []);
@@ -341,22 +346,6 @@ export default function AdminHomepageSectionsManager() {
     };
   }, []);
 
-  useEffect(() => {
-    setTrendingVisibleCount(10);
-  }, [trendingStoreSearch]);
-
-  useEffect(() => {
-    setFeaturedVisibleCount(10);
-  }, [featuredOfferSearch]);
-
-  useEffect(() => {
-    setFeaturedProductVisibleCount(10);
-  }, [featuredProductSearch]);
-
-  useEffect(() => {
-    setLatestVisibleCount(10);
-  }, [latestStoreSearch]);
-
   function updateSectionField(sectionKey, field, value) {
     setSections((current) => ({
       ...current,
@@ -369,7 +358,7 @@ export default function AdminHomepageSectionsManager() {
 
   function toggleStoreSelection(sectionKey, storeSlug) {
     setSections((current) => {
-      const selectedStoreSlugs = current[sectionKey].selectedStoreSlugs || [];
+      const selectedStoreSlugs = current[sectionKey]?.selectedStoreSlugs || [];
       const exists = selectedStoreSlugs.includes(storeSlug);
 
       return {
@@ -386,7 +375,7 @@ export default function AdminHomepageSectionsManager() {
 
   function toggleOfferSelection(offerId) {
     setSections((current) => {
-      const selectedOfferIds = current.featuredCoupons.selectedOfferIds || [];
+      const selectedOfferIds = current.featuredCoupons?.selectedOfferIds || [];
       const exists = selectedOfferIds.includes(offerId);
 
       return {
@@ -403,7 +392,7 @@ export default function AdminHomepageSectionsManager() {
 
   function toggleProductSelection(productId) {
     setSections((current) => {
-      const selectedProductIds = current.featuredProducts.selectedProductIds || [];
+      const selectedProductIds = current.featuredProducts?.selectedProductIds || [];
       const exists = selectedProductIds.includes(productId);
 
       return {
@@ -429,11 +418,11 @@ export default function AdminHomepageSectionsManager() {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error || "Unable to save homepage sections.");
+        throw new Error(payload.error || "Unable to save homepage content.");
       }
 
       setSections({ ...initialState, ...payload.data });
-      toast.success("Homepage sections saved.");
+      toast.success("All Homepage sections and content updated successfully!");
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -443,172 +432,224 @@ export default function AdminHomepageSectionsManager() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-12 text-sm text-[var(--muted)]">Loading homepage sections...</CardContent>
-      </Card>
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 text-center text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+        Loading homepage section manager...
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-6 max-w-[1500px] mx-auto">
+      
+      {/* Top Action Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-xs">
         <div>
-          <CardTitle>Homepage Sections</CardTitle>
-          <CardDescription>Choose exactly which stores and offers should appear in the sections below the hero.</CardDescription>
+          <h1 className="text-xl font-bold text-zinc-900 dark:text-white tracking-tight">Homepage Content & Section Control</h1>
+          <p className="text-xs text-zinc-700 dark:text-zinc-400 mt-0.5 font-medium">
+            Configure every section, banner marquee, trending stores, featured coupons, and beauty products rendered on the public homepage.
+          </p>
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={saveSections} disabled={isSaving} leadingIcon={isSaving ? <Spinner /> : null}>
-          {isSaving ? "Saving Sections..." : "Save Sections"}
-        </Button>
-      </CardHeader>
-      <CardContent className="grid gap-5">
-        <SettingsSection
-          title="Trending Stores"
-          description="Select the stores that should appear in the Trending Stores section on the homepage."
+
+        <Button
+          type="button"
+          onClick={saveSections}
+          disabled={isSaving}
+          className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition cursor-pointer"
         >
-          <div className="mb-4 grid gap-4 md:grid-cols-2">
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              <span className="font-medium text-[var(--text)]">Section Title</span>
+          {isSaving ? "Saving All Sections..." : "Save All Homepage Sections"}
+        </Button>
+      </div>
+
+      <div className="grid gap-6">
+
+        {/* 1. TOP ANNOUNCEMENT MARQUEE SECTION */}
+        <SectionCard
+          title="Top Announcement Ticker Marquee"
+          badge="TOP HEADER"
+          description="Edit continuous sliding ticker announcements shown at the top of the frontend homepage."
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 md:col-span-2">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Announcement Text (Separate offers with |)</span>
               <Input
-                value={sections.trendingStores.title}
-                onChange={(event) => updateSectionField("trendingStores", "title", event.target.value)}
+                value={sections.marquee?.text || ""}
+                onChange={(e) => updateSectionField("marquee", "text", e.target.value)}
+                placeholder="e.g. 🔥 Neeman's Extra 10% Off | Vijay Sales Tech Deals | Nykaa Pink Sale"
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              <span className="font-medium text-[var(--text)]">Items Limit</span>
+          </div>
+        </SectionCard>
+
+        {/* 2. TRENDING STORES SECTION */}
+        <SectionCard
+          title="Trending Stores Section"
+          badge="LIMIT: 14 STORES"
+          description="Select exactly which catalog stores should appear in the Trending Stores grid."
+        >
+          <div className="mb-4 grid gap-4 md:grid-cols-2">
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Section Title</span>
+              <Input
+                value={sections.trendingStores?.title || "Trending Stores"}
+                onChange={(e) => updateSectionField("trendingStores", "title", e.target.value)}
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
+              />
+            </label>
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Grid Limit (Max: 14)</span>
               <Input
                 type="number"
                 min="1"
                 max="20"
-                value={sections.trendingStores.limit}
-                onChange={(event) => updateSectionField("trendingStores", "limit", Number(event.target.value) || 1)}
+                value={sections.trendingStores?.limit || 14}
+                onChange={(e) => updateSectionField("trendingStores", "limit", Number(e.target.value) || 14)}
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
           </div>
+
           <StoreSelectionList
             stores={stores}
-            selectedStoreSlugs={sections.trendingStores.selectedStoreSlugs || []}
-            onToggle={(storeSlug) => toggleStoreSelection("trendingStores", storeSlug)}
+            selectedStoreSlugs={sections.trendingStores?.selectedStoreSlugs || []}
+            onToggle={(slug) => toggleStoreSelection("trendingStores", slug)}
             searchValue={trendingStoreSearch}
-            onSearchChange={(event) => {
-              const nextValue = event.target.value;
-              startTransition(() => setTrendingStoreSearch(nextValue));
+            onSearchChange={(e) => {
+              const val = e.target.value;
+              startTransition(() => setTrendingStoreSearch(val));
             }}
             visibleCount={trendingVisibleCount}
-            onLoadMore={() => setTrendingVisibleCount((current) => current + 10)}
+            onLoadMore={() => setTrendingVisibleCount((prev) => prev + 10)}
           />
-        </SettingsSection>
+        </SectionCard>
 
-        <SettingsSection
-          title="Featured Coupons"
-          description="Select the exact offers that should appear in the Featured Coupons section."
+        {/* 3. FEATURED COUPONS SECTION */}
+        <SectionCard
+          title="Featured Coupons Section"
+          badge="PROMO CODES"
+          description="Select high-conversion promo coupons to feature on the homepage."
         >
           <div className="mb-4 grid gap-4 md:grid-cols-2">
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              <span className="font-medium text-[var(--text)]">Section Title</span>
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Section Title</span>
               <Input
-                value={sections.featuredCoupons.title}
-                onChange={(event) => updateSectionField("featuredCoupons", "title", event.target.value)}
+                value={sections.featuredCoupons?.title || "Featured Coupons"}
+                onChange={(e) => updateSectionField("featuredCoupons", "title", e.target.value)}
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              <span className="font-medium text-[var(--text)]">Items Limit</span>
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Coupons Limit</span>
               <Input
                 type="number"
                 min="1"
                 max="20"
-                value={sections.featuredCoupons.limit}
-                onChange={(event) => updateSectionField("featuredCoupons", "limit", Number(event.target.value) || 1)}
+                value={sections.featuredCoupons?.limit || 4}
+                onChange={(e) => updateSectionField("featuredCoupons", "limit", Number(e.target.value) || 4)}
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
           </div>
+
           <OfferSelectionList
             offers={offers}
-            selectedOfferIds={sections.featuredCoupons.selectedOfferIds || []}
+            selectedOfferIds={sections.featuredCoupons?.selectedOfferIds || []}
             onToggle={toggleOfferSelection}
             searchValue={featuredOfferSearch}
-            onSearchChange={(event) => {
-              const nextValue = event.target.value;
-              startTransition(() => setFeaturedOfferSearch(nextValue));
+            onSearchChange={(e) => {
+              const val = e.target.value;
+              startTransition(() => setFeaturedOfferSearch(val));
             }}
             visibleCount={featuredVisibleCount}
-            onLoadMore={() => setFeaturedVisibleCount((current) => current + 10)}
+            onLoadMore={() => setFeaturedVisibleCount((prev) => prev + 10)}
           />
-        </SettingsSection>
+        </SectionCard>
 
-        <SettingsSection
-          title="Featured Products"
-          description="Select the products that should appear in the Featured Products section on the homepage."
+        {/* 4. FEATURED BEAUTY PRODUCTS SECTION */}
+        <SectionCard
+          title="Top Selling Beauty Products"
+          badge="BUY NOW ITEMS"
+          description="Select beauty and featured store items to display on the homepage with Buy Now CTAs."
         >
           <div className="mb-4 grid gap-4 md:grid-cols-2">
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              <span className="font-medium text-[var(--text)]">Section Title</span>
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Section Title</span>
               <Input
-                value={sections.featuredProducts.title}
-                onChange={(event) => updateSectionField("featuredProducts", "title", event.target.value)}
+                value={sections.featuredProducts?.title || "Top Selling Beauty Products"}
+                onChange={(e) => updateSectionField("featuredProducts", "title", e.target.value)}
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              <span className="font-medium text-[var(--text)]">Items Limit</span>
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Products Limit</span>
               <Input
                 type="number"
                 min="1"
                 max="20"
-                value={sections.featuredProducts.limit}
-                onChange={(event) => updateSectionField("featuredProducts", "limit", Number(event.target.value) || 1)}
+                value={sections.featuredProducts?.limit || 4}
+                onChange={(e) => updateSectionField("featuredProducts", "limit", Number(e.target.value) || 4)}
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
           </div>
+
           <ProductSelectionList
             products={products}
-            selectedProductIds={sections.featuredProducts.selectedProductIds || []}
+            selectedProductIds={sections.featuredProducts?.selectedProductIds || []}
             onToggle={toggleProductSelection}
             searchValue={featuredProductSearch}
-            onSearchChange={(event) => {
-              const nextValue = event.target.value;
-              startTransition(() => setFeaturedProductSearch(nextValue));
+            onSearchChange={(e) => {
+              const val = e.target.value;
+              startTransition(() => setFeaturedProductSearch(val));
             }}
             visibleCount={featuredProductVisibleCount}
-            onLoadMore={() => setFeaturedProductVisibleCount((current) => current + 10)}
+            onLoadMore={() => setFeaturedProductVisibleCount((prev) => prev + 10)}
           />
-        </SettingsSection>
+        </SectionCard>
 
-        <SettingsSection
-          title="Latest Stores"
-          description="Select the stores that should appear in the Latest Stores section."
+        {/* 5. LATEST STORES SECTION */}
+        <SectionCard
+          title="Latest Stores Section"
+          badge="RECENT CATALOG"
+          description="Configure stores to feature in the Latest Stores section."
         >
           <div className="mb-4 grid gap-4 md:grid-cols-2">
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              <span className="font-medium text-[var(--text)]">Section Title</span>
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Section Title</span>
               <Input
-                value={sections.latestStores.title}
-                onChange={(event) => updateSectionField("latestStores", "title", event.target.value)}
+                value={sections.latestStores?.title || "Latest Stores"}
+                onChange={(e) => updateSectionField("latestStores", "title", e.target.value)}
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              <span className="font-medium text-[var(--text)]">Items Limit</span>
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Stores Limit</span>
               <Input
                 type="number"
                 min="1"
                 max="20"
-                value={sections.latestStores.limit}
-                onChange={(event) => updateSectionField("latestStores", "limit", Number(event.target.value) || 1)}
+                value={sections.latestStores?.limit || 10}
+                onChange={(e) => updateSectionField("latestStores", "limit", Number(e.target.value) || 10)}
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
           </div>
+
           <StoreSelectionList
             stores={stores}
-            selectedStoreSlugs={sections.latestStores.selectedStoreSlugs || []}
-            onToggle={(storeSlug) => toggleStoreSelection("latestStores", storeSlug)}
+            selectedStoreSlugs={sections.latestStores?.selectedStoreSlugs || []}
+            onToggle={(slug) => toggleStoreSelection("latestStores", slug)}
             searchValue={latestStoreSearch}
-            onSearchChange={(event) => {
-              const nextValue = event.target.value;
-              startTransition(() => setLatestStoreSearch(nextValue));
+            onSearchChange={(e) => {
+              const val = e.target.value;
+              startTransition(() => setLatestStoreSearch(val));
             }}
             visibleCount={latestVisibleCount}
-            onLoadMore={() => setLatestVisibleCount((current) => current + 10)}
+            onLoadMore={() => setLatestVisibleCount((prev) => prev + 10)}
           />
-        </SettingsSection>
-      </CardContent>
-    </Card>
+        </SectionCard>
+
+      </div>
+    </div>
   );
 }

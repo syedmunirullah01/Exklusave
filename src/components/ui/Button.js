@@ -1,88 +1,84 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-const layeredVariants = new Set(["primary", "club"]);
+const Button = React.forwardRef(
+  (
+    {
+      className,
+      variant = "primary",
+      size = "md",
+      leadingIcon,
+      trailingIcon,
+      asChild = false,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const variants = {
+      primary:
+        "bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold border-transparent shadow-xs transition-colors cursor-pointer",
+      secondary:
+        "bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer",
+      outline:
+        "bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer",
+      ghost:
+        "bg-transparent text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white font-semibold transition-colors cursor-pointer",
+      club:
+        "bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-extrabold uppercase tracking-wider border-transparent shadow-xs transition-colors cursor-pointer",
+    };
 
-const Button = React.forwardRef(({ className, variant = "primary", size = "md", leadingIcon, trailingIcon, asChild = false, children, ...props }, ref) => {
-  const variants = {
-    primary:
-      "border border-[var(--color-primary)] bg-[var(--surface)] text-[var(--color-primary)] before:absolute before:inset-x-[-4px] before:bottom-[-5px] before:top-[4px] before:-z-10 before:rounded-[inherit] before:border before:border-[var(--color-primary)] before:bg-[var(--surface-soft)] before:content-[''] hover:-translate-y-[1px] hover:before:bottom-[-6px] active:translate-y-[2px] active:before:bottom-[-3px] active:before:top-[2px]",
-    secondary:
-      "border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--text)] hover:bg-[var(--surface)]",
-    outline:
-      "border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-soft)]",
-    ghost: "text-[var(--muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]",
-    club:
-      "border border-[var(--color-primary)] bg-[var(--surface)] text-[var(--color-primary)] before:absolute before:inset-x-[-4px] before:bottom-[-5px] before:top-[4px] before:-z-10 before:rounded-[inherit] before:border before:border-[var(--color-primary)] before:bg-[var(--surface-soft)] before:content-[''] hover:-translate-y-[1px] hover:before:bottom-[-6px] active:translate-y-[2px] active:before:bottom-[-3px] active:before:top-[2px]",
-  };
+    const sizes = {
+      sm: "h-8 px-3 text-xs rounded-xl",
+      md: "h-9 px-4 text-xs rounded-xl",
+      lg: "h-11 px-6 text-sm rounded-xl",
+      club: "h-11 px-5 text-[11px] font-black uppercase tracking-[0.18em] rounded-xl",
+    };
 
-  const sizes = {
-    sm: "h-9 px-3.5 text-sm font-medium",
-    md: "h-10 px-4 text-sm font-medium",
-    lg: "h-11 px-6 text-sm font-semibold",
-    club: "h-11 px-5 text-[11px] font-black uppercase tracking-[0.18em]",
-  };
+    const buttonClassName = cn(
+      "inline-flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:pointer-events-none disabled:opacity-50 select-none",
+      variants[variant],
+      sizes[size],
+      className
+    );
 
-  const buttonClassName = cn(
-    "relative inline-flex items-center justify-center gap-2 rounded-xl transition-[transform,box-shadow,background-color,border-color,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgba(163,230,53,0.22)] disabled:pointer-events-none disabled:opacity-50",
-    variants[variant],
-    sizes[size],
-    className
-  );
+    const buttonChildren =
+      asChild && React.isValidElement(children)
+        ? children.props.children
+        : children;
 
-  const buttonChildren = asChild && React.isValidElement(children) ? children.props.children : children;
+    const content = (
+      <span className="flex items-center justify-center gap-2 whitespace-nowrap">
+        {leadingIcon && (
+          <span className="grid h-4 w-4 shrink-0 place-items-center">
+            {leadingIcon}
+          </span>
+        )}
+        <span>{buttonChildren}</span>
+        {trailingIcon && (
+          <span className="grid h-4 w-4 shrink-0 place-items-center">
+            {trailingIcon}
+          </span>
+        )}
+      </span>
+    );
 
-  const content = (
-    <span
-      className={cn(
-        "relative z-10 flex w-full items-center justify-center gap-2 rounded-[inherit] whitespace-nowrap",
-        layeredVariants.has(variant) ? "px-4 py-2" : ""
-      )}
-    >
-      {leadingIcon ? (
-        <span
-          className={cn(
-            "grid h-6 w-6 shrink-0 place-items-center rounded-md text-[12px] font-black",
-            variant === "club" || variant === "primary"
-              ? "border border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--surface)]"
-              : "border border-current/10 bg-current/10"
-          )}
-        >
-          {leadingIcon}
-        </span>
-        ) : null}
-      <span>{buttonChildren}</span>
-      {trailingIcon ? (
-        <span
-          className={cn(
-            "grid h-5 w-5 shrink-0 place-items-center rounded text-[12px] font-black",
-            variant === "club" || variant === "primary"
-              ? "text-[var(--color-primary)]"
-              : "text-current"
-          )}
-        >
-          {trailingIcon}
-        </span>
-      ) : null}
-    </span>
-  );
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(children, {
+        ...props,
+        className: cn(buttonClassName, children.props.className),
+        children: content,
+      });
+    }
 
-  if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, {
-      ...props,
-      className: cn(buttonClassName, children.props.className),
-      children: content,
-    });
+    return (
+      <button ref={ref} className={buttonClassName} {...props}>
+        {content}
+      </button>
+    );
   }
-
-  return (
-    <button ref={ref} className={buttonClassName} {...props}>
-      {content}
-    </button>
-  );
-});
+);
 
 Button.displayName = "Button";
 
 export { Button };
-

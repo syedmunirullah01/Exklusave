@@ -28,15 +28,16 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <CustomMarkup markup={settings.general.customHeadScript} />
+        <CustomMarkup markup={settings.seo?.customMetaTags} />
+        <CustomMarkup markup={settings.general?.customHeadScript} />
       </head>
       <body className={`${plusJakartaSans.variable} antialiased`}>
-        <CustomMarkup markup={settings.general.customBodyStartScript} />
+        <CustomMarkup markup={settings.general?.customBodyStartScript} />
         <Providers>
           {children}
         </Providers>
         <AppToaster />
-        <CustomMarkup markup={settings.general.customBodyEndScript} />
+        <CustomMarkup markup={settings.general?.customBodyEndScript} />
       </body>
     </html>
   );

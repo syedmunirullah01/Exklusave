@@ -168,9 +168,7 @@ export default function AdminCategoriesManager() {
   }
 
   async function handleDeleteConfirmed() {
-    if (!deleteTarget) {
-      return;
-    }
+    if (!deleteTarget) return;
 
     setIsDeleting(true);
 
@@ -197,57 +195,71 @@ export default function AdminCategoriesManager() {
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <CardTitle>Categories Management</CardTitle>
-            <CardDescription>Manage the taxonomy used by stores and public catalog routes.</CardDescription>
+            <CardDescription>Manage store taxonomy, categories, and URL slugs for catalog routing.</CardDescription>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="h-10 w-10 rounded-lg border border-[var(--border)] px-0"
+              className="h-10 w-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-0"
               onClick={() => loadData(true)}
               aria-label="Refresh categories"
               disabled={isRefreshing}
             >
               <RefreshIcon />
             </Button>
-            <Button type="button" onClick={openCreateModal}>
-              Add Category
+            <Button type="button" onClick={openCreateModal} className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2.5 shadow-xs">
+              + Add Category
             </Button>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Category</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Linked Stores</TableHead>
-                <TableHead>Edit/Delete</TableHead>
+              <TableRow className="bg-zinc-50/80 dark:bg-zinc-800/80 border-b border-zinc-200 dark:border-zinc-800">
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Category</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Slug</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Description</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Linked Stores</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {categories.map((category) => (
-                <TableRow key={category.slug}>
+                <TableRow key={category.slug} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition border-b border-zinc-100 dark:border-zinc-800/60">
                   <TableCell>
-                    <p className="font-medium text-[var(--text)]">{category.name}</p>
+                    <p className="font-bold text-zinc-900 dark:text-white text-xs">{category.name}</p>
                   </TableCell>
-                  <TableCell className="text-[var(--muted)]">/{category.slug}</TableCell>
-                  <TableCell className="max-w-[320px] text-sm text-[var(--muted)]">
-                    {category.description || "No description added yet."}
-                  </TableCell>
-                  <TableCell>{categoryStoreCounts[category.slug] || 0}</TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => openEditModal(category)}>
+                    <span className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 inline-block">
+                      /{category.slug}
+                    </span>
+                  </TableCell>
+                  <TableCell className="max-w-[320px] text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                    {category.description || "No description set"}
+                  </TableCell>
+                  <TableCell>
+                    <span className="inline-block rounded-md bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                      {categoryStoreCounts[category.slug] || 0} stores
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 hover:border-emerald-600 transition"
+                        onClick={() => openEditModal(category)}
+                      >
                         Edit
                       </Button>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="border border-[var(--border)]"
+                        className="h-8 px-2.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition"
                         onClick={() => setDeleteTarget(category)}
                       >
                         Delete
@@ -260,8 +272,8 @@ export default function AdminCategoriesManager() {
           </Table>
 
           {!categories.length && !isHydrating ? (
-            <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-soft)] px-5 py-6 text-sm text-[var(--muted)]">
-              No categories added yet. Create the first category to structure store taxonomy.
+            <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 px-5 py-6 text-xs text-center text-zinc-500 dark:text-zinc-400">
+              No categories found. Create your first category to structure store taxonomy.
             </div>
           ) : null}
         </CardContent>
@@ -271,92 +283,63 @@ export default function AdminCategoriesManager() {
         <DialogContent
           titleId={titleId}
           descriptionId={descriptionId}
-          className="max-w-2xl rounded-[30px] border border-[var(--border)] bg-[var(--surface)] p-0"
+          className="max-w-2xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white p-6"
         >
-          <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="border-b border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-soft),var(--surface))] p-6 lg:border-r lg:border-b-0 lg:p-8">
-              <DialogHeader className="mb-6">
-                <Badge className="w-fit border border-[var(--color-primary)]/20 bg-[var(--surface)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                  Taxonomy editor
-                </Badge>
-                <DialogTitle id={titleId}>{editingCategory ? "Update Category" : "Add New Category"}</DialogTitle>
-                <DialogDescription id={descriptionId}>
-                  Keep store grouping consistent across the dashboard and public catalog.
-                </DialogDescription>
-              </DialogHeader>
+          <DialogHeader className="mb-4">
+            <DialogTitle id={titleId} className="text-zinc-900 dark:text-white">{editingCategory ? "Update Category" : "Add New Category"}</DialogTitle>
+            <DialogDescription id={descriptionId} className="text-zinc-600 dark:text-zinc-400">
+              Keep store taxonomy consistent across the dashboard and public storefront.
+            </DialogDescription>
+          </DialogHeader>
 
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">Preview</p>
-                  <p className="mt-4 text-lg font-semibold text-[var(--text)]">{watchedName || "Category name preview"}</p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">/{watchedSlug || "category-slug"}</p>
-                  <p className="mt-4 text-sm text-[var(--muted)]">
-                    {watchedDescription || "Optional description helps admins understand the taxonomy intent."}
-                  </p>
-                </div>
+          <form className="grid gap-4" onSubmit={handleSubmit(submitCategory)}>
+            <label className="grid gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+              Category Name
+              <Input placeholder="Fashion" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white" {...register("name")} />
+              {errors.name ? <span className="text-xs text-rose-600">{errors.name.message}</span> : null}
+            </label>
 
-                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-                  <p className="text-sm font-semibold text-[var(--text)]">Safety note</p>
-                  <p className="mt-3 text-sm text-[var(--muted)]">
-                    Category slug updates automatically sync linked stores so existing route patterns stay aligned.
-                  </p>
-                </div>
-              </div>
+            <label className="grid gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+              Slug
+              <Input
+                placeholder="fashion"
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono"
+                {...register("slug", {
+                  onChange: () => {
+                    slugEditedRef.current = true;
+                  },
+                })}
+              />
+              <span className="text-[11px] font-normal text-zinc-500 dark:text-zinc-400">Used in route paths like /category/[slug]</span>
+              {errors.slug ? <span className="text-xs text-rose-600">{errors.slug.message}</span> : null}
+            </label>
+
+            <label className="grid gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+              Description
+              <textarea
+                rows={3}
+                maxLength={180}
+                className="w-full resize-none rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-xs text-zinc-900 dark:text-white outline-none transition placeholder:text-zinc-400 focus:border-emerald-600"
+                placeholder="Notes about the stores that belong to this category."
+                {...register("description")}
+              />
+              {errors.description ? <span className="text-xs text-rose-600">{errors.description.message}</span> : null}
+            </label>
+
+            <div className="flex justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting} className="dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                disabled={isSubmitting}
+                leadingIcon={isSubmitting ? <Spinner /> : null}
+              >
+                {isSubmitting ? (editingCategory ? "Updating..." : "Saving...") : editingCategory ? "Update Category" : "Save Category"}
+              </Button>
             </div>
-
-            <form className="grid gap-5 bg-[var(--surface)] p-6 lg:p-8" onSubmit={handleSubmit(submitCategory)}>
-              <label className="grid gap-2 text-sm text-[var(--muted)]">
-                <span className="font-medium text-[var(--text)]">Category Name</span>
-                <Input placeholder="Fashion" className="rounded-lg bg-[var(--surface)]" {...register("name")} />
-                {errors.name ? <span className="text-sm text-[var(--color-primary)]">{errors.name.message}</span> : null}
-              </label>
-
-              <label className="grid gap-2 text-sm text-[var(--muted)]">
-                <span className="font-medium text-[var(--text)]">Slug</span>
-                <Input
-                  placeholder="fashion"
-                  className="rounded-lg bg-[var(--surface)]"
-                  {...register("slug", {
-                    onChange: () => {
-                      slugEditedRef.current = true;
-                    },
-                  })}
-                />
-                <span className="text-xs text-[var(--muted)]">Used in admin taxonomy and store route grouping.</span>
-                {errors.slug ? <span className="text-sm text-[var(--color-primary)]">{errors.slug.message}</span> : null}
-              </label>
-
-              <label className="grid gap-2 text-sm text-[var(--muted)]">
-                <span className="font-medium text-[var(--text)]">Description</span>
-                <textarea
-                  rows={5}
-                  maxLength={180}
-                  className="min-h-[132px] w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[color:rgba(163,230,53,0.16)]"
-                  placeholder="Optional notes about the stores that belong to this category."
-                  {...register("description")}
-                />
-                <div className="flex items-center justify-between text-xs text-[var(--muted)]">
-                  <span>Optional internal guidance for admins.</span>
-                  <span>{watchedDescription.length}/180</span>
-                </div>
-                {errors.description ? <span className="text-sm text-[var(--color-primary)]">{errors.description.message}</span> : null}
-              </label>
-
-              <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-5 sm:flex-row sm:justify-end">
-                <Button type="button" variant="outline" className="rounded-lg" onClick={() => setOpen(false)} disabled={isSubmitting}>
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="rounded-lg"
-                  disabled={isSubmitting}
-                  leadingIcon={isSubmitting ? <Spinner /> : null}
-                >
-                  {isSubmitting ? (editingCategory ? "Updating Category..." : "Saving Category...") : editingCategory ? "Update Category" : "Save Category"}
-                </Button>
-              </div>
-            </form>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
 

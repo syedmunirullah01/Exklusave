@@ -546,55 +546,96 @@ export default function AdminStoresManager() {
         <CardContent className="pt-0">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-zinc-100/90 dark:bg-zinc-800/80 border-b border-zinc-200 dark:border-zinc-800">
                 <TableHead className="w-14">
                   <label className="flex items-center justify-center">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--surface-soft)] accent-[var(--color-primary)]"
+                      className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-emerald-600 cursor-pointer"
                       checked={stores.length > 0 && selectedStoreSlugs.length === stores.length}
                       onChange={toggleSelectAllStores}
                       aria-label="Select all stores"
                     />
                   </label>
                 </TableHead>
-                <TableHead>Store Name</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Country</TableHead>
-                <TableHead>Offers Count</TableHead>
-                <TableHead>Trust</TableHead>
-                <TableHead>Edit/Delete</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Store Name</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Slug</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Category</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Country</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Offers Count</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Trust Signal</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {stores.map((store) => (
-                <TableRow key={store.slug}>
+                <TableRow key={store.slug} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition border-b border-zinc-100 dark:border-zinc-800">
                   <TableCell>
                     <label className="flex items-center justify-center">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--surface-soft)] accent-[var(--color-primary)]"
+                        className="h-4 w-4 rounded border-zinc-300 accent-emerald-600 cursor-pointer"
                         checked={selectedStoreSlugs.includes(store.slug)}
                         onChange={() => toggleStoreSelection(store.slug)}
                         aria-label={`Select ${store.name}`}
                       />
                     </label>
                   </TableCell>
-                  <TableCell className="font-medium">{store.name}</TableCell>
-                  <TableCell className="text-[var(--muted)]">/{store.slug}</TableCell>
-                  <TableCell>{store.category}</TableCell>
-                  <TableCell>{store.countryCode || DEFAULT_COUNTRY_CODE}</TableCell>
-                  <TableCell>{store.offersCount}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{store.trustStatus}</Badge>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white border border-zinc-200 overflow-hidden shadow-2xs">
+                        {store.logoImage ? (
+                          <img src={store.logoImage} alt={store.name} className="h-6 w-6 object-contain" />
+                        ) : (
+                          <span className="text-xs font-black text-zinc-700">{store.logoText || store.name?.charAt(0) || "S"}</span>
+                        )}
+                      </div>
+                      <span className="font-bold text-zinc-900 text-xs">{store.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-zinc-600">/{store.slug}</TableCell>
+                  <TableCell>
+                    <span className="inline-block rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-800">
+                      {store.category || "General"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs font-bold text-zinc-700">
+                    {store.countryCode || DEFAULT_COUNTRY_CODE}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs font-extrabold text-emerald-700">
+                    {store.offersCount || 0}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => openEditModal(store)}>
+                    <span
+                      className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        store.trustStatus === "Verified" || store.trustStatus === "Active"
+                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                          : store.trustStatus === "Trusted"
+                          ? "bg-blue-100 text-blue-800 border border-blue-200"
+                          : "bg-amber-100 text-amber-800 border border-amber-200"
+                      }`}
+                    >
+                      {store.trustStatus || "Active"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-xs font-semibold text-zinc-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition"
+                        onClick={() => openEditModal(store)}
+                      >
                         Edit
                       </Button>
-                      <Button type="button" variant="ghost" size="sm" className="border border-[var(--border)]" onClick={() => openDeleteModal(store)}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+                        onClick={() => openDeleteModal(store)}
+                      >
                         Delete
                       </Button>
                     </div>

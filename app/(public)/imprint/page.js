@@ -1,123 +1,59 @@
-import { getMetadataDefaults } from "@/server/services/settings-service";
-import { getPublicSiteSettings } from "@/server/services/settings-service";
+import { getMetadataDefaults, getPublicSiteSettings } from "@/server/services/settings-service";
 
 export async function generateMetadata() {
   return getMetadataDefaults("Imprint");
 }
 
-const sections = [
-  {
-    title: "Information According to § 5 TMG",
-    content: [
-      { label: "Company Name", value: "Persuekey Ltd." },
-      { label: "Registered Address", value: "123 Commerce Street, London, EC1A 1BB, United Kingdom" },
-      { label: "Company Type", value: "Private Limited Company" },
-      { label: "Registration Number", value: "UK12345678" },
-      { label: "VAT ID", value: "GB 123 456 789" },
-    ],
-  },
-  {
-    title: "Contact Information",
-    content: [
-      { label: "Email", value: "support@persuekey.com", href: "mailto:support@persuekey.com" },
-      { label: "Partnership Inquiries", value: "partners@persuekey.com", href: "mailto:partners@persuekey.com" },
-      { label: "Trust & Safety", value: "trust@persuekey.com", href: "mailto:trust@persuekey.com" },
-    ],
-  },
-  {
-    title: "Responsible for Content",
-    content: [
-      { label: "Editorial Responsibility", value: "Persuekey Editorial Team" },
-      { label: "Address", value: "123 Commerce Street, London, EC1A 1BB, United Kingdom" },
-      { label: "Jurisdiction", value: "England & Wales" },
-    ],
-  },
-];
-
-const disclaimers = [
-  {
-    title: "Liability for Content",
-    text: "The contents of our pages have been created with the utmost care. However, we cannot guarantee the accuracy, completeness, or topicality of the content. As a service provider, we are liable for our own content on these pages according to general laws. As a service provider, we are not obligated to monitor transmitted or stored third-party information.",
-  },
-  {
-    title: "Liability for Links",
-    text: "Our offer contains links to external websites of third parties, on whose contents we have no influence. Therefore, we cannot assume any liability for these external contents. The respective provider or operator of the linked pages is always responsible for their content. The linked pages were checked for possible legal violations at the time of linking. Illegal content was not recognisable at the time of linking.",
-  },
-  {
-    title: "Affiliate Disclosure",
-    text: "Persuekey participates in affiliate marketing programs. When you click on certain links and make purchases, we may earn a commission. This does not affect the price you pay. We only promote deals and stores that we believe provide genuine value to our members. Affiliate relationships do not influence our editorial decisions or offer verification process.",
-  },
-  {
-    title: "Copyright",
-    text: "The content and works created by the site operators on these pages are subject to copyright law. Duplication, processing, distribution, or any form of commercialisation of such material beyond the scope of the copyright law shall require the prior written consent of its respective author or creator. Downloads and copies of this site are only permitted for private, non-commercial use.",
-  },
+const DEFAULT_IMPRINT_SECTIONS = [
+  { id: "isec-1", icon: "🏢", title: "1. Information According to § 5 TMG", content: `Company Name: Persuekey Ltd.\nRegistered Address: 123 Commerce Street, London, EC1A 1BB, United Kingdom\nCompany Type: Private Limited Company\nRegistration Number: UK12345678\nVAT ID: GB 123 456 789` },
+  { id: "isec-2", icon: "📞", title: "2. Contact Information", content: `General Support: support@persuekey.com\nPartnership Inquiries: partners@persuekey.com\nTrust & Safety: trust@persuekey.com` },
+  { id: "isec-3", icon: "📝", title: "3. Responsible for Content", content: `Editorial Responsibility: Persuekey Editorial Team\nAddress: 123 Commerce Street, London, EC1A 1BB, United Kingdom\nJurisdiction: England & Wales` },
+  { id: "isec-4", icon: "⚖️", title: "4. Legal Disclaimers & Copyright", content: `Liability for Content: The contents of our pages have been created with the utmost care.\nLiability for Links: Our offer contains links to external websites of third parties, on whose contents we have no influence.\nAffiliate Disclosure: Persuekey participates in affiliate marketing programs.\nCopyright: Duplication or distribution beyond copyright scope requires prior written consent.` }
 ];
 
 export default async function ImprintPage() {
   const settings = await getPublicSiteSettings();
+  const pageData = settings.pages?.imprint || {};
+
+  const heroBadge = pageData.heroBadge || "Legal Information";
+  const heroTitle = pageData.heroTitle || "Imprint";
+  const heroSubtitle = pageData.heroSubtitle || `Legal disclosure and company information for ${settings.siteName} as required by applicable law.`;
+  const lastUpdated = pageData.lastUpdated || "July 2026";
+  const sections = pageData.sections && pageData.sections.length > 0 ? pageData.sections : DEFAULT_IMPRINT_SECTIONS;
   const year = new Date().getFullYear();
 
   return (
     <div className="min-h-screen bg-white">
 
-      {/* Hero */}
+      {/* Hero Header */}
       <div className="relative overflow-hidden bg-zinc-950 pb-20 pt-20">
         <div className="pointer-events-none absolute -top-20 left-1/2 h-56 w-[600px] -translate-x-1/2 rounded-full bg-emerald-500/8 blur-[100px]" />
         <div className="pointer-events-none absolute bottom-0 left-1/2 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
         <div className="relative mx-auto max-w-[900px] px-5 sm:px-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 mb-6">
-            <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">Legal Information</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">{heroBadge}</span>
           </div>
-          <h1 className="text-5xl sm:text-6xl font-black tracking-[-0.04em] text-white mb-4">Imprint</h1>
+          <h1 className="text-5xl sm:text-6xl font-black tracking-[-0.04em] text-white mb-4">{heroTitle}</h1>
           <p className="text-sm text-white/35 max-w-lg mx-auto leading-relaxed">
-            Legal disclosure and company information for {settings.siteName} as required by applicable law.
+            {heroSubtitle}
           </p>
-          <p className="mt-3 text-[11px] text-white/20 uppercase tracking-widest">Last updated: {year}</p>
+          <p className="mt-3 text-[11px] text-white/20 uppercase tracking-widest">Last updated: {lastUpdated}</p>
         </div>
       </div>
 
       <div className="mx-auto max-w-[900px] px-5 sm:px-8 py-16 space-y-8">
-
         {/* Company Info Sections */}
-        {sections.map((section) => (
-          <div key={section.title} className="rounded-3xl border border-zinc-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="border-b border-zinc-100 px-6 py-4 bg-zinc-50/70">
+        {sections.map((section, idx) => (
+          <div key={section.id || idx} className="rounded-3xl border border-zinc-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="border-b border-zinc-100 px-6 py-4 bg-zinc-50/70 flex items-center gap-2">
+              <span className="text-base">{section.icon || "🏢"}</span>
               <h2 className="text-sm font-black uppercase tracking-[0.18em] text-zinc-700">{section.title}</h2>
             </div>
-            <div className="divide-y divide-zinc-100">
-              {section.content.map((row) => (
-                <div key={row.label} className="flex flex-col sm:flex-row sm:items-center gap-1 px-6 py-4">
-                  <span className="w-full sm:w-48 shrink-0 text-xs font-black uppercase tracking-[0.14em] text-zinc-400">{row.label}</span>
-                  {row.href ? (
-                    <a href={row.href} className="text-sm font-semibold text-emerald-600 hover:underline transition-colors">
-                      {row.value}
-                    </a>
-                  ) : (
-                    <span className="text-sm font-semibold text-zinc-700">{row.value}</span>
-                  )}
-                </div>
-              ))}
+            <div className="px-6 py-5 text-sm text-zinc-700 leading-relaxed whitespace-pre-line">
+              {section.content}
             </div>
           </div>
         ))}
-
-        {/* Disclaimer Sections */}
-        <div className="rounded-3xl border border-zinc-200 bg-white overflow-hidden shadow-sm">
-          <div className="border-b border-zinc-100 px-6 py-4 bg-zinc-50/70">
-            <h2 className="text-sm font-black uppercase tracking-[0.18em] text-zinc-700">Legal Notices & Disclaimers</h2>
-          </div>
-          <div className="divide-y divide-zinc-100">
-            {disclaimers.map((d) => (
-              <div key={d.title} className="px-6 py-6">
-                <h3 className="text-sm font-black text-zinc-900 mb-3 flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  {d.title}
-                </h3>
-                <p className="text-sm text-zinc-500 leading-relaxed">{d.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Dispute Resolution */}
         <div className="rounded-3xl border border-amber-200 bg-amber-50/60 p-6">

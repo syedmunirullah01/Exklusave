@@ -1,10 +1,13 @@
 import AdminSidebar from "@/features/admin/components/AdminSidebar";
+import { AdminThemeProvider } from "@/features/admin/components/AdminThemeProvider";
 
 export default function AdminLayout({ children }) {
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--text)] lg:grid lg:grid-cols-[18rem_minmax(0,1fr)]">
-      <AdminSidebar />
-      <div className="min-w-0">{children}</div>
-    </div>
+    <AdminThemeProvider>
+      <div className="min-h-screen lg:flex transition-colors">
+        <AdminSidebar />
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
+    </AdminThemeProvider>
   );
 }

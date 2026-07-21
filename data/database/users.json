@@ -1,0 +1,43 @@
+[
+  {
+    "id": "usr_1784635630248_uuwq3",
+    "name": "User",
+    "email": "user@persuekey.com",
+    "password": "$2b$10$1lPoV3JPvSj74xq/zj1VBeZ/ojr9VEBJ8hxyNCNTAID/oyot02Mx.",
+    "role": "admin",
+    "permissions": [
+      "dashboard",
+      "homepage",
+      "stores",
+      "products",
+      "offers",
+      "hero",
+      "blogs",
+      "categories",
+      "settings"
+    ],
+    "isActive": true,
+    "createdAt": "2026-07-21T12:07:10.248Z",
+    "updatedAt": "2026-07-21T12:07:10.248Z"
+  },
+  {
+    "id": "usr_admin_master",
+    "name": "Master Admin",
+    "email": "admin@persuekey.com",
+    "password": "$2b$10$X4XY4yG7Mq3/PVyROLSeE.JCxgTtOzNZe5UAy6VS0MDeKWVkr5XGG",
+    "role": "admin",
+    "permissions": [
+      "dashboard",
+      "stores",
+      "offers",
+      "products",
+      "categories",
+      "blogs",
+      "hero",
+      "settings"
+    ],
+    "isActive": true,
+    "createdAt": "2026-07-21T11:55:43.876Z",
+    "updatedAt": "2026-07-21T11:55:43.876Z"
+  }
+]

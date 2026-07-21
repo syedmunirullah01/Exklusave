@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { supabase } from "@/lib/supabase";
-import { getPermissionsForRole, ROLE_LABELS } from "@/lib/access-control";
+import { getUsers, createUser } from "@/server/repositories/users-repository";
 import { requirePermission } from "@/server/auth";
 
 function sanitizeUser(user) {
@@ -10,11 +8,10 @@ function sanitizeUser(user) {
     name: user.name || "",
     email: user.email,
     role: user.role,
-    roleLabel: ROLE_LABELS[user.role] || user.role,
-    permissions: getPermissionsForRole(user.role, user.permissions),
-    isActive: user.is_active,
-    createdAt: user.created_at,
-    updatedAt: user.updated_at,
+    permissions: user.permissions,
+    isActive: user.isActive,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
   };
 }
 
@@ -24,20 +21,12 @@ export async function GET() {
     return access.error;
   }
 
-  if (!supabase) {
-    return NextResponse.json({ error: "Database is not configured." }, { status: 500 });
-  }
-
-  const { data: users, error } = await supabase
-    .from("users")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
+  try {
+    const users = await getUsers();
+    return NextResponse.json({ data: (users || []).map(sanitizeUser) });
+  } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  return NextResponse.json({ data: (users || []).map(sanitizeUser) });
 }
 
 export async function POST(request) {
@@ -46,65 +35,10 @@ export async function POST(request) {
     return access.error;
   }
 
-  if (!supabase) {
-    return NextResponse.json({ error: "Database is not configured." }, { status: 500 });
-  }
-
   try {
     const payload = await request.json();
-    const name = payload?.name?.trim() || "";
-    const email = payload?.email?.trim()?.toLowerCase();
-    const password = payload?.password?.trim();
-    const role = payload?.role || "editor";
-    const isActive = payload?.isActive !== false;
-
-    if (!name) {
-      return NextResponse.json({ error: "Name is required." }, { status: 400 });
-    }
-
-    if (!email) {
-      return NextResponse.json({ error: "Email is required." }, { status: 400 });
-    }
-
-    if (!password || password.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters long." }, { status: 400 });
-    }
-
-    const { data: existingUser, error: checkError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
-
-    if (checkError) {
-      return NextResponse.json({ error: checkError.message }, { status: 500 });
-    }
-
-    if (existingUser) {
-      return NextResponse.json({ error: "A user with this email already exists." }, { status: 409 });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const permissions = getPermissionsForRole(role, payload?.permissions);
-
-    const { data: user, error: insertError } = await supabase
-      .from("users")
-      .insert({
-        name,
-        email,
-        password: hashedPassword,
-        role,
-        permissions,
-        is_active: isActive,
-      })
-      .select("*")
-      .single();
-
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ data: sanitizeUser(user) }, { status: 201 });
+    const newUser = await createUser(payload);
+    return NextResponse.json({ data: sanitizeUser(newUser) }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Unable to create user." }, { status: 400 });
   }

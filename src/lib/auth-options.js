@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { supabase } from "@/lib/supabase";
+import { getUserByEmail } from "@/server/repositories/users-repository";
 import { getPermissionsForRole } from "@/lib/access-control";
 
 export const authOptions = {
@@ -13,44 +13,28 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email) {
-          throw new Error("Invalid credentials");
+        if (!credentials?.email || !credentials?.password) {
+          return null;
         }
 
         const email = credentials.email.trim().toLowerCase();
+        const user = await getUserByEmail(email);
 
-        if (supabase) {
-          try {
-            const { data: user } = await supabase
-              .from("users")
-              .select("id, name, email, password, role, permissions, is_active")
-              .eq("email", email)
-              .maybeSingle();
-
-            if (user && user.is_active) {
-              const isPasswordCorrect = await bcrypt.compare(credentials.password || "", user.password);
-              if (isPasswordCorrect) {
-                return {
-                  id: user.id,
-                  name: user.name,
-                  email: user.email,
-                  role: user.role,
-                  permissions: getPermissionsForRole(user.role, user.permissions),
-                };
-              }
-            }
-          } catch (e) {
-            // Ignore database errors and fallback
-          }
+        if (!user || !user.isActive) {
+          return null;
         }
 
-        // Allow any email to log in as admin user
+        const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
+        if (!isPasswordCorrect) {
+          return null;
+        }
+
         return {
-          id: "temp-admin-id",
-          name: "Admin User",
-          email: email,
-          role: "admin",
-          permissions: getPermissionsForRole("admin"),
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          permissions: getPermissionsForRole(user.role, user.permissions),
         };
       },
     }),
@@ -85,7 +69,7 @@ export const authOptions = {
     signIn: "/login",
     error: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "persuekey-secret-key-2026",
 };
 
 export const nextAuthHandler = NextAuth(authOptions);

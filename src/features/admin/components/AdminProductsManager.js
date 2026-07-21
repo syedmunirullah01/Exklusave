@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { ConfirmModal } from "@/components/ui/AppModal";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
@@ -60,7 +59,6 @@ export default function AdminProductsManager() {
     if (selectedStoreFilter === "all") {
       return products;
     }
-
     return products.filter((product) => product.storeSlug === selectedStoreFilter);
   }, [products, selectedStoreFilter]);
 
@@ -136,18 +134,9 @@ export default function AdminProductsManager() {
   }
 
   function validateImageFile(file) {
-    if (!file) {
-      return "Please choose a product image.";
-    }
-
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      return "Product image must be PNG, JPG, WEBP, or SVG.";
-    }
-
-    if (file.size > MAX_IMAGE_SIZE) {
-      return "Product image must be 2MB or smaller.";
-    }
-
+    if (!file) return "Please choose a product image.";
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return "Product image must be PNG, JPG, WEBP, or SVG.";
+    if (file.size > MAX_IMAGE_SIZE) return "Product image must be 2MB or smaller.";
     return null;
   }
 
@@ -225,9 +214,7 @@ export default function AdminProductsManager() {
   }
 
   async function handleDeleteConfirmed() {
-    if (!deleteTarget) {
-      return;
-    }
+    if (!deleteTarget) return;
 
     setIsDeleting(true);
     const response = await fetch(`/api/products/${deleteTarget.id}`, { method: "DELETE" });
@@ -247,26 +234,33 @@ export default function AdminProductsManager() {
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardTitle>Products</CardTitle>
-            <CardDescription>Manage store-linked products that appear after coupons and deals on store pages.</CardDescription>
+            <CardTitle>Products Management</CardTitle>
+            <CardDescription>Manage store-linked products and beauty items rendered on store pages.</CardDescription>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <select
               value={selectedStoreFilter}
-              onChange={(event) => setSelectedStoreFilter(event.target.value)}
-              className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 text-sm text-[var(--text)] outline-none"
+              onChange={(e) => setSelectedStoreFilter(e.target.value)}
+              className="h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-zinc-800 dark:text-zinc-200 outline-none shadow-2xs"
             >
-              <option value="all">All stores</option>
+              <option value="all">All Store Catalogs</option>
               {stores.map((store) => (
                 <option key={store.slug} value={store.slug}>
                   {store.name}
                 </option>
               ))}
             </select>
-            <Button type="button" variant="ghost" size="sm" className="h-10 w-10 rounded-lg border border-[var(--border)] px-0" onClick={loadData} aria-label="Refresh products">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-10 w-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-0"
+              onClick={loadData}
+              aria-label="Refresh products"
+            >
               <RefreshIcon />
             </Button>
-            <Button type="button" onClick={handleOpenCreate}>
+            <Button type="button" onClick={handleOpenCreate} className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2.5 shadow-xs">
               Add Product
             </Button>
           </div>
@@ -274,43 +268,78 @@ export default function AdminProductsManager() {
         <CardContent className="pt-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Store</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Edit/Delete</TableHead>
+              <TableRow className="bg-zinc-50/80 dark:bg-zinc-800/80 border-b border-zinc-200 dark:border-zinc-800">
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Product Title</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Store</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Price</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Status</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {visibleProducts.map((product) => (
-                <TableRow key={product.id}>
+                <TableRow key={product.id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition border-b border-zinc-100 dark:border-zinc-800/60">
                   <TableCell>
-                    <div className="space-y-1">
-                      <p className="font-medium text-[var(--text)]">{product.title}</p>
-                      <p className="text-sm text-[var(--muted)]">{product.description}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-2xs">
+                        {product.image ? (
+                          <img src={product.image} alt={product.title} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-xs font-black text-zinc-600 dark:text-zinc-400">{product.title?.charAt(0) || "P"}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-zinc-900 dark:text-white text-xs truncate">{product.title}</p>
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate max-w-xs">{product.description || "No description set"}</p>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell>{product.storeName}</TableCell>
+                  <TableCell>
+                    <span className="inline-block rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                      {product.storeName || product.storeSlug || "General"}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     {product.originalPrice ? (
-                      <div className="flex flex-col">
-                        <span className="font-medium text-[var(--text)]">${product.price}</span>
-                        <span className="text-sm text-[var(--muted)] line-through">${product.originalPrice}</span>
+                      <div className="flex items-baseline gap-1.5 font-mono text-xs">
+                        <span className="font-bold text-emerald-700 dark:text-emerald-400">${product.price}</span>
+                        <span className="text-zinc-400 dark:text-zinc-500 line-through text-[11px]">${product.originalPrice}</span>
                       </div>
                     ) : (
-                      `$${product.price}`
+                      <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400">${product.price || "0.00"}</span>
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{product.status}</Badge>
+                    <span
+                      className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        product.status === "Active"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                          : product.status === "Draft"
+                          ? "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                          : "bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
+                      }`}
+                    >
+                      {product.status || "Active"}
+                    </span>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => handleOpenEdit(product)}>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 hover:border-emerald-600 transition"
+                        onClick={() => handleOpenEdit(product)}
+                      >
                         Edit
                       </Button>
-                      <Button type="button" variant="ghost" size="sm" className="border border-[var(--border)]" onClick={() => setDeleteTarget(product)}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition"
+                        onClick={() => setDeleteTarget(product)}
+                      >
                         Delete
                       </Button>
                     </div>
@@ -321,7 +350,7 @@ export default function AdminProductsManager() {
           </Table>
 
           {!visibleProducts.length ? (
-            <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-soft)] px-5 py-6 text-sm text-[var(--muted)]">
+            <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 px-5 py-6 text-xs text-center text-zinc-500 dark:text-zinc-400">
               No products found. Add products and assign them to stores from the admin panel.
             </div>
           ) : null}
@@ -329,35 +358,35 @@ export default function AdminProductsManager() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white">
           <DialogHeader>
-            <DialogTitle>{editingProduct ? "Edit Product" : "Add Product"}</DialogTitle>
-            <DialogDescription>Create store-linked products that appear after offers on public store pages.</DialogDescription>
+            <DialogTitle className="text-zinc-900 dark:text-white">{editingProduct ? "Edit Product" : "Add Product"}</DialogTitle>
+            <DialogDescription className="text-zinc-600 dark:text-zinc-400">Create store-linked products that appear after offers on public store pages.</DialogDescription>
           </DialogHeader>
 
           <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-            <label className="grid gap-2 text-sm text-[var(--muted)] md:col-span-2">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold md:col-span-2">
               Product Title
-              <Input name="title" value={form.title} onChange={handleChange} placeholder="Nike Air Max 2026" />
+              <Input name="title" value={form.title} onChange={handleChange} placeholder="Nike Air Max 2026" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white" />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)] md:col-span-2">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold md:col-span-2">
               Description
               <textarea
                 name="description"
-                rows={4}
+                rows={3}
                 value={form.description}
                 onChange={handleChange}
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--color-primary)]"
+                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-xs text-zinc-900 dark:text-white outline-none transition placeholder:text-zinc-400 focus:border-emerald-600"
                 placeholder="Short product description for the store page."
               />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
               Store
               <select
                 name="storeSlug"
                 value={form.storeSlug}
                 onChange={handleChange}
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--text)] outline-none focus:border-[var(--color-primary)]"
+                className="h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 text-xs text-zinc-900 dark:text-white outline-none focus:border-emerald-600"
               >
                 <option value="">Select store</option>
                 {stores.map((store) => (
@@ -367,36 +396,36 @@ export default function AdminProductsManager() {
                 ))}
               </select>
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
               Status
               <select
                 name="status"
                 value={form.status}
                 onChange={handleChange}
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--text)] outline-none focus:border-[var(--color-primary)]"
+                className="h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 text-xs text-zinc-900 dark:text-white outline-none focus:border-emerald-600"
               >
                 <option>Active</option>
                 <option>Draft</option>
                 <option>Out of stock</option>
               </select>
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              Price
-              <Input name="price" type="number" min="0" step="0.01" value={form.price} onChange={handleChange} placeholder="99.99" />
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
+              Price ($)
+              <Input name="price" type="number" min="0" step="0.01" value={form.price} onChange={handleChange} placeholder="99.99" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white" />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
-              Original Price
-              <Input name="originalPrice" type="number" min="0" step="0.01" value={form.originalPrice} onChange={handleChange} placeholder="129.99" />
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
+              Original Price ($)
+              <Input name="originalPrice" type="number" min="0" step="0.01" value={form.originalPrice} onChange={handleChange} placeholder="129.99" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white" />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)] md:col-span-2">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold md:col-span-2">
               Product Image
               <div className="grid gap-3">
                 {form.image ? (
-                  <div className="relative h-48 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)]">
-                    <Image src={form.image} alt="Product preview" fill className="object-cover" unoptimized />
+                  <div className="relative h-40 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800">
+                    <img src={form.image} alt="Product preview" className="h-full w-full object-cover" />
                   </div>
                 ) : (
-                  <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-soft)] text-sm text-[var(--muted)]">
+                  <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40 text-xs text-zinc-500 dark:text-zinc-400">
                     No product image uploaded yet.
                   </div>
                 )}
@@ -408,15 +437,15 @@ export default function AdminProductsManager() {
                       className="hidden"
                       onChange={(event) => handleImageSelection(event.target.files?.[0])}
                     />
-                    <span className="inline-flex h-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--surface-soft)]">
-                      {isUploadingImage ? "Uploading..." : "Upload from Cloudinary"}
+                    <span className="inline-flex h-9 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-4 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-200 dark:hover:bg-zinc-700">
+                      {isUploadingImage ? "Uploading..." : "Upload Cloudinary Image"}
                     </span>
                   </label>
                   {form.image ? (
                     <Button
                       type="button"
                       variant="ghost"
-                      className="rounded-lg border border-[var(--border)]"
+                      className="h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs"
                       onClick={() => setForm((current) => ({ ...current, image: "" }))}
                       disabled={isUploadingImage}
                     >
@@ -424,20 +453,19 @@ export default function AdminProductsManager() {
                     </Button>
                   ) : null}
                 </div>
-                <Input name="image" value={form.image} onChange={handleChange} placeholder="Or paste image URL manually" />
+                <Input name="image" value={form.image} onChange={handleChange} placeholder="Or paste image URL manually" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white" />
               </div>
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)] md:col-span-2">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold md:col-span-2">
               CTA Label
-              <Input name="ctaLabel" value={form.ctaLabel} onChange={handleChange} placeholder="View Product" />
-              <span className="text-xs text-[var(--muted)]">Product page URL automatically generate hogi title aur selected store se.</span>
+              <Input name="ctaLabel" value={form.ctaLabel} onChange={handleChange} placeholder="View Product" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white" />
             </label>
-            {error ? <p className="text-sm text-[var(--muted)] md:col-span-2">{error}</p> : null}
-            <div className="flex gap-3 md:col-span-2 md:justify-end">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            {error ? <p className="text-xs text-rose-600 md:col-span-2">{error}</p> : null}
+            <div className="flex gap-3 md:col-span-2 md:justify-end pt-3">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting || isUploadingImage} leadingIcon={isSubmitting ? <Spinner /> : null}>
+              <Button type="submit" disabled={isSubmitting || isUploadingImage} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold" leadingIcon={isSubmitting ? <Spinner /> : null}>
                 {isSubmitting ? "Saving Product..." : editingProduct ? "Update Product" : "Save Product"}
               </Button>
             </div>

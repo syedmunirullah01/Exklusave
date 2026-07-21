@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ConfirmModal } from "@/components/ui/AppModal";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
@@ -193,27 +192,42 @@ export default function AdminOffersManager() {
     await loadData();
   }
 
+  // Helper to find store logo
+  const storeLogoMap = useMemo(() => {
+    return stores.reduce((acc, store) => {
+      acc[store.slug] = store.logoImage;
+      return acc;
+    }, {});
+  }, [stores]);
+
   return (
     <>
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardTitle>Coupons & Deals</CardTitle>
-            <CardDescription>Manage coupon codes and direct deals from one place.</CardDescription>
+            <CardTitle>Coupons & Deals Management</CardTitle>
+            <CardDescription>Manage verified promo codes, discount deals, and store offer coverage.</CardDescription>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             {selectedOfferIds.length ? (
-              <Button type="button" variant="outline" className="rounded-lg" onClick={() => setDeleteTarget({ id: "__bulk__", title: `${selectedOfferIds.length} selected offers` })}>
+              <Button type="button" variant="outline" className="rounded-xl dark:bg-zinc-800 dark:border-zinc-700 text-rose-600 dark:text-rose-400" onClick={() => setDeleteTarget({ id: "__bulk__", title: `${selectedOfferIds.length} selected offers` })}>
                 Delete Selected ({selectedOfferIds.length})
               </Button>
             ) : null}
-            <Button type="button" variant="ghost" size="sm" className="h-10 w-10 rounded-lg border border-[var(--border)] px-0" onClick={loadData} aria-label="Refresh offers">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-10 w-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-0"
+              onClick={loadData}
+              aria-label="Refresh offers"
+            >
               <RefreshIcon />
             </Button>
-            <Button type="button" variant="outline" className="rounded-lg" onClick={() => setBulkImportOpen(true)}>
+            <Button type="button" variant="outline" className="rounded-xl dark:bg-zinc-800 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200" onClick={() => setBulkImportOpen(true)}>
               Import CSV
             </Button>
-            <Button type="button" onClick={handleOpenCreate}>
+            <Button type="button" onClick={handleOpenCreate} className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2.5 shadow-xs">
               Add Coupon / Deal
             </Button>
           </div>
@@ -221,108 +235,173 @@ export default function AdminOffersManager() {
         <CardContent className="pt-0">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-zinc-50/80 dark:bg-zinc-800/80 border-b border-zinc-200 dark:border-zinc-800">
                 <TableHead className="w-14">
                   <label className="flex items-center justify-center">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--surface-soft)] accent-[var(--color-primary)]"
+                      className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-emerald-600 cursor-pointer"
                       checked={offers.length > 0 && selectedOfferIds.length === offers.length}
                       onChange={toggleSelectAll}
                       aria-label="Select all offers"
                     />
                   </label>
                 </TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Store</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Expiry Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Edit/Delete</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Offer Title</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Promo Code / Tag</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Type</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Store</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Expiry Date</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Status</TableHead>
+                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {offers.map((offer) => (
-                <TableRow key={offer.id}>
-                  <TableCell>
-                    <label className="flex items-center justify-center">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--surface-soft)] accent-[var(--color-primary)]"
-                        checked={selectedOfferIds.includes(offer.id)}
-                        onChange={() => toggleOfferSelection(offer.id)}
-                        aria-label={`Select ${offer.title}`}
-                      />
-                    </label>
-                  </TableCell>
-                  <TableCell className="font-medium">{offer.title}</TableCell>
-                  <TableCell>{offer.type}</TableCell>
-                  <TableCell>{offer.storeName}</TableCell>
-                  <TableCell>{offer.source}</TableCell>
-                  <TableCell>{offer.expiryDate}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{offer.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => handleOpenEdit(offer)}>
-                        Edit
-                      </Button>
-                      <Button type="button" variant="ghost" size="sm" className="border border-[var(--border)]" onClick={() => openDeleteModal(offer)}>
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {offers.map((offer) => {
+                const storeLogo = storeLogoMap[offer.storeSlug];
+                return (
+                  <TableRow key={offer.id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition border-b border-zinc-100 dark:border-zinc-800/60">
+                    <TableCell>
+                      <label className="flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-emerald-600 cursor-pointer"
+                          checked={selectedOfferIds.includes(offer.id)}
+                          onChange={() => toggleOfferSelection(offer.id)}
+                          aria-label={`Select ${offer.title}`}
+                        />
+                      </label>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-2xs">
+                          {storeLogo ? (
+                            <img src={storeLogo} alt={offer.storeName} className="h-6 w-6 object-contain" />
+                          ) : (
+                            <span className="text-xs font-black text-zinc-700 dark:text-zinc-300">{offer.storeName?.charAt(0) || "S"}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-zinc-900 dark:text-white text-xs truncate max-w-sm">{offer.title}</p>
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate max-w-xs">{offer.description || "Active promotion"}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800 inline-block">
+                        {offer.code || "DEAL-ACTIVATED"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                          offer.type === "Coupon"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                        }`}
+                      >
+                        {offer.type || "Coupon"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-block rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                        {offer.storeName || offer.storeSlug || "General"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
+                      {offer.expiryDate || "Ongoing"}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                          offer.status === "Active"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                            : offer.status === "Scheduled"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                            : "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                        }`}
+                      >
+                        {offer.status || "Active"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1.5">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 hover:border-emerald-600 transition"
+                          onClick={() => handleOpenEdit(offer)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition"
+                          onClick={() => openDeleteModal(offer)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
+
+          {!offers.length ? (
+            <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 px-5 py-6 text-xs text-center text-zinc-500 dark:text-zinc-400">
+              No offers added yet. Use the button above to add coupons and deals.
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white">
           <DialogHeader>
-            <DialogTitle>{editingOffer ? "Edit Coupon / Deal" : "Add Coupon / Deal"}</DialogTitle>
-            <DialogDescription>Create or update coupon and deal records in the shared JSON catalog.</DialogDescription>
+            <DialogTitle className="text-zinc-900 dark:text-white">{editingOffer ? "Edit Coupon / Deal" : "Add Coupon / Deal"}</DialogTitle>
+            <DialogDescription className="text-zinc-600 dark:text-zinc-400">Create or update coupon codes and discount deals in the database catalog.</DialogDescription>
           </DialogHeader>
 
           <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-            <label className="grid gap-2 text-sm text-[var(--muted)] md:col-span-2">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold md:col-span-2">
               Title
-              <Input name="title" value={form.title} onChange={handleChange} placeholder="20% off premium supplements" />
+              <Input name="title" value={form.title} onChange={handleChange} placeholder="20% off premium supplements" className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white" />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)] md:col-span-2">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold md:col-span-2">
               Description
               <textarea
                 name="description"
-                rows={4}
+                rows={3}
                 value={form.description}
                 onChange={handleChange}
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--color-primary)]"
+                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2.5 text-xs text-zinc-900 dark:text-white outline-none transition placeholder:text-zinc-400 focus:border-emerald-600"
                 placeholder="Short description for the offer."
               />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
               Type
               <select
                 name="type"
                 value={form.type}
                 onChange={handleChange}
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--text)] outline-none focus:border-[var(--color-primary)]"
+                className="h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 text-xs text-zinc-900 dark:text-white outline-none focus:border-emerald-600"
               >
                 <option>Coupon</option>
                 <option>Deal</option>
               </select>
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
               Store
               <select
                 name="storeSlug"
                 value={form.storeSlug}
                 onChange={handleChange}
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--text)] outline-none focus:border-[var(--color-primary)]"
+                className="h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 text-xs text-zinc-900 dark:text-white outline-none focus:border-emerald-600"
               >
                 <option value="">Select store</option>
                 {stores.map((store) => (
@@ -332,26 +411,27 @@ export default function AdminOffersManager() {
                 ))}
               </select>
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
               Affiliate Link
               <Input
                 name="affiliateLink"
                 value={form.affiliateLink}
                 onChange={handleChange}
-                placeholder="Auto-filled from selected store, or paste a custom tracking URL"
+                placeholder="Auto-filled from selected store, or paste custom URL"
+                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
               Expiry Date
-              <Input name="expiryDate" type="date" value={form.expiryDate} onChange={handleChange} />
+              <Input name="expiryDate" type="date" value={form.expiryDate} onChange={handleChange} className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white" />
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
               Status
               <select
                 name="status"
                 value={form.status}
                 onChange={handleChange}
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--text)] outline-none focus:border-[var(--color-primary)]"
+                className="h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 text-xs text-zinc-900 dark:text-white outline-none focus:border-emerald-600"
               >
                 <option>Active</option>
                 <option>Scheduled</option>
@@ -359,28 +439,28 @@ export default function AdminOffersManager() {
                 <option>Expired</option>
               </select>
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)]">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
               Source
               <select
                 name="source"
                 value={form.source}
                 onChange={handleChange}
-                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--text)] outline-none focus:border-[var(--color-primary)]"
+                className="h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 text-xs text-zinc-900 dark:text-white outline-none focus:border-emerald-600"
               >
                 <option>Manual</option>
                 <option>Network</option>
               </select>
             </label>
-            <label className="grid gap-2 text-sm text-[var(--muted)] md:col-span-2">
+            <label className="grid gap-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-semibold md:col-span-2">
               {form.type === "Deal" ? "Deal Code Optional" : "Coupon Code"}
-              <Input name="code" value={form.code} onChange={handleChange} placeholder={form.type === "Deal" ? "Optional for direct deals" : "SAVE20"} />
+              <Input name="code" value={form.code} onChange={handleChange} placeholder={form.type === "Deal" ? "Optional for direct deals" : "SAVE20"} className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white font-mono" />
             </label>
-            {error ? <p className="text-sm text-[var(--muted)] md:col-span-2">{error}</p> : null}
-            <div className="flex gap-3 md:col-span-2 md:justify-end">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            {error ? <p className="text-xs text-rose-600 md:col-span-2">{error}</p> : null}
+            <div className="flex gap-3 md:col-span-2 md:justify-end pt-3">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
                 {isSubmitting ? "Saving..." : editingOffer ? "Update Coupon / Deal" : "Save Coupon / Deal"}
               </Button>
             </div>

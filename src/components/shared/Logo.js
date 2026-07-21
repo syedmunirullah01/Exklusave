@@ -1,13 +1,15 @@
 import Link from "next/link";
 
-export default function Logo() {
+export default function Logo({ className = "" }) {
   return (
-    <Link href="/" className="flex items-center gap-3">
-      <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[var(--color-primary)] text-[15px] font-black text-black shadow-[0_18px_40px_rgba(163,230,53,0.18)]">
-        P
-      </span>
-      <span className="text-[15px] font-extrabold tracking-tight text-white uppercase tracking-wider">
-        Persue<span className="text-[var(--color-primary)]">key</span>
+    <Link
+      href="/"
+      className={`relative inline-flex items-center rounded-xl bg-emerald-600 px-4 py-1.5 shadow-md shadow-emerald-600/20 overflow-hidden ${className}`}
+    >
+      <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white dark:bg-zinc-900" />
+      <span className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white dark:bg-zinc-900" />
+      <span className="text-[1.35rem] font-black italic leading-none tracking-[-0.07em] text-white px-1">
+        Persuekey
       </span>
     </Link>
   );
