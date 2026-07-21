@@ -24,19 +24,37 @@ const DEFAULT_BANNERS = [
   {
     id: "b1",
     image: "/banners/banner-1.png",
-    alt: "Mega Sale Up to 70% Off",
+    alt: "HK Vitals Super Saver Days - Extra 5% Off",
     link: "/stores",
   },
   {
     id: "b2",
     image: "/banners/banner-2.png",
-    alt: "Summer Fashion & Apparel Deals",
-    link: "/categories",
+    alt: "Flipkart Minutes - Everything in Minutes at Re 1",
+    link: "/stores",
   },
   {
     id: "b3",
     image: "/banners/banner-3.png",
-    alt: "Tech Cyber Sale & Verified Vouchers",
+    alt: "Nykaa Hot Pink Sale - Live Offers",
+    link: "/stores",
+  },
+  {
+    id: "b4",
+    image: "/banners/banner-4.png",
+    alt: "Cyber Tech Sale - Up to 60% Off Gadgets",
+    link: "/stores",
+  },
+  {
+    id: "b5",
+    image: "/banners/banner-5.png",
+    alt: "Summer Fashion Fest - Flat 50% Off Apparel",
+    link: "/stores",
+  },
+  {
+    id: "b6",
+    image: "/banners/banner-6.png",
+    alt: "Super Grocery Days - Extra 25% Cashback",
     link: "/stores",
   },
 ];
@@ -75,85 +93,105 @@ export default function HeroSection() {
     };
   }, []);
 
+  const totalSlides = banners.length;
+
   useEffect(() => {
-    if (isPaused || banners.length <= 1) return;
+    if (isPaused || totalSlides <= 1) return;
     const interval = setInterval(() => {
-      setSlideIndex((prev) => (prev + 1) % banners.length);
+      setSlideIndex((prev) => (prev + 1) % totalSlides);
     }, 4500);
     return () => clearInterval(interval);
-  }, [isPaused, banners.length]);
+  }, [isPaused, totalSlides]);
 
   const handlePrev = () => {
-    setSlideIndex((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
+    setSlideIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setSlideIndex((prev) => (prev + 1) % banners.length);
+    setSlideIndex((prev) => (prev + 1) % totalSlides);
   };
 
-  const activeBanner = banners[slideIndex] || DEFAULT_BANNERS[0];
+  const banner1 = banners[slideIndex] || DEFAULT_BANNERS[0];
+  const banner2 = banners[(slideIndex + 1) % banners.length] || DEFAULT_BANNERS[1];
 
   return (
     <section 
-      className="relative py-3 sm:py-6 overflow-hidden"
+      className="relative py-1 sm:py-2 overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Pure Graphic Banner Container */}
-      <div className="relative w-full aspect-[1.6/1] sm:aspect-[2.4/1] md:aspect-[3/1] max-h-[480px] rounded-2xl sm:rounded-3xl border border-black/8 overflow-hidden bg-zinc-950 shadow-md group">
-        
-        {/* Banner Link & Full Cover Image */}
-        <Link href={activeBanner.link || "/stores"} className="block relative h-full w-full">
-          <Image
-            src={activeBanner.image}
-            alt={activeBanner.alt || "Promotional Banner"}
-            fill
-            priority
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-            unoptimized
-          />
-        </Link>
+      <div className="relative w-full">
+        {/* Responsive Banner Grid (1 on mobile, 2 side-by-side on desktop) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          {/* Main Banner (Visible on Mobile & Desktop) */}
+          <Link
+            href={banner1.link || "/stores"}
+            className="group relative block w-full aspect-[1.85/1] sm:aspect-[2.1/1] rounded-2xl overflow-hidden border border-zinc-200 shadow-sm bg-zinc-900 transition-all duration-300 hover:shadow-lg hover:border-violet-300"
+          >
+            <Image
+              src={banner1.image}
+              alt={banner1.alt || "Promotional Banner"}
+              fill
+              priority
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              unoptimized
+            />
+          </Link>
 
-        {/* Navigation Arrows */}
-        {banners.length > 1 && (
+          {/* Secondary Banner (Hidden on Mobile, Visible on Desktop) */}
+          <Link
+            href={banner2.link || "/stores"}
+            className="group relative hidden md:block w-full aspect-[1.85/1] sm:aspect-[2.1/1] rounded-2xl overflow-hidden border border-zinc-200 shadow-sm bg-zinc-900 transition-all duration-300 hover:shadow-lg hover:border-violet-300"
+          >
+            <Image
+              src={banner2.image}
+              alt={banner2.alt || "Promotional Banner"}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              unoptimized
+            />
+          </Link>
+        </div>
+
+        {/* Floating Navigation Arrows */}
+        {totalSlides > 1 && (
           <>
             <button
               type="button"
               onClick={handlePrev}
-              className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-all hover:bg-white hover:text-black hover:scale-105 active:scale-95 shadow-lg opacity-80 hover:opacity-100 cursor-pointer z-10"
-              aria-label="Previous Banner"
+              className="absolute -left-2 sm:left-2 top-1/2 -translate-y-1/2 grid h-9 w-9 sm:h-11 sm:w-11 place-items-center rounded-full border border-zinc-300 bg-white/90 text-zinc-800 backdrop-blur-md transition-all hover:bg-violet-600 hover:text-white hover:border-violet-600 hover:scale-105 active:scale-95 shadow-md cursor-pointer z-10"
+              aria-label="Previous Slide"
             >
-              <ChevronLeftIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+              <ChevronLeftIcon className="h-5 w-5" />
             </button>
 
             <button
               type="button"
               onClick={handleNext}
-              className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-all hover:bg-white hover:text-black hover:scale-105 active:scale-95 shadow-lg opacity-80 hover:opacity-100 cursor-pointer z-10"
-              aria-label="Next Banner"
+              className="absolute -right-2 sm:right-2 top-1/2 -translate-y-1/2 grid h-9 w-9 sm:h-11 sm:w-11 place-items-center rounded-full border border-zinc-300 bg-white/90 text-zinc-800 backdrop-blur-md transition-all hover:bg-violet-600 hover:text-white hover:border-violet-600 hover:scale-105 active:scale-95 shadow-md cursor-pointer z-10"
+              aria-label="Next Slide"
             >
-              <ChevronRightIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+              <ChevronRightIcon className="h-5 w-5" />
             </button>
           </>
         )}
 
-        {/* Carousel Dot Indicators */}
-        {banners.length > 1 && (
-          <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10 bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-            {banners.map((b, idx) => (
+        {/* Slide Indicators */}
+        {totalSlides > 1 && (
+          <div className="mt-3 flex items-center justify-center gap-1.5 z-10">
+            {banners.map((_, idx) => (
               <button
-                key={b.id || idx}
+                key={idx}
                 type="button"
                 onClick={() => setSlideIndex(idx)}
                 className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                  idx === slideIndex ? "w-7 bg-emerald-500" : "w-2 bg-white/50 hover:bg-white"
+                  idx === slideIndex ? "w-6 bg-violet-600" : "w-2 bg-zinc-300 hover:bg-zinc-400"
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
           </div>
         )}
-
       </div>
     </section>
   );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import AnnouncementBar from "@/components/layout/AnnouncementBar";
 
 const PRIMARY_NAV = [
   { label: "Home", href: "/" },
@@ -117,6 +118,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-white/90 backdrop-blur-md">
+      <AnnouncementBar />
       {/* Desktop Navbar */}
       <div
         className={cn(

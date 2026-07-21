@@ -161,7 +161,7 @@ export default function TopSellingBeautyProductsSection() {
         <SectionHeader title="Top Selling Beauty Products" />
         
         {/* Navigation Arrows */}
-        <div className="flex items-center gap-2 mb-10">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
           <button 
             onClick={handlePrev}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-650 transition hover:bg-zinc-50 hover:text-zinc-950 active:scale-95 shadow-sm"
@@ -237,14 +237,26 @@ export default function TopSellingBeautyProductsSection() {
                     {product.cashbackText}
                   </div>
 
-                  {/* Best Price block */}
-                  <div className="flex flex-col items-start mt-4">
-                    <span className="text-[8px] font-extrabold text-zinc-400 uppercase tracking-widest leading-none">
-                      Best price
-                    </span>
-                    <span className="text-[16px] font-black text-zinc-900 leading-none mt-1">
-                      ${product.bestPrice.toLocaleString("en-US")}
-                    </span>
+                  {/* Best Price & Buy Now Button */}
+                  <div className="flex items-center justify-between mt-4 w-full pt-1">
+                    <div className="flex flex-col items-start">
+                      <span className="text-[8px] font-extrabold text-zinc-400 uppercase tracking-widest leading-none">
+                        Best price
+                      </span>
+                      <span className="text-[16px] font-black text-zinc-900 leading-none mt-1">
+                        ${product.bestPrice.toLocaleString("en-US")}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-95 group-hover:shadow-md cursor-pointer"
+                    >
+                      <span>Buy Now</span>
+                      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -255,7 +267,7 @@ export default function TopSellingBeautyProductsSection() {
       
       {/* Bullet dots indicator */}
       {maxIndex > 0 && (
-        <div className="flex items-center justify-center gap-1.5 mt-8">
+        <div className="flex items-center justify-center gap-1.5 mt-3.5">
           {Array.from({ length: maxIndex + 1 }).map((_, i) => (
             <button
               key={i}

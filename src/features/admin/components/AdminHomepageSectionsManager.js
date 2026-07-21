@@ -10,7 +10,7 @@ const initialState = {
   trendingStores: {
     title: "Trending Stores",
     selectedStoreSlugs: [],
-    limit: 5,
+    limit: 15,
   },
   featuredCoupons: {
     title: "Featured Coupons",

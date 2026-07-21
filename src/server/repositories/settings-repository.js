@@ -99,7 +99,7 @@ export const defaultSettings = {
       trendingStores: {
         title: "Trending Stores",
         selectedStoreSlugs: [],
-        limit: 5,
+        limit: 13,
       },
       featuredCoupons: {
         title: "Featured Coupons",

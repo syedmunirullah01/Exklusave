@@ -136,7 +136,7 @@ export default function TopCategoriesSection() {
         <SectionHeader title="Top Categories" href="#" />
         
         {/* Navigation Arrows */}
-        <div className="flex items-center gap-2 mb-10">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
           <button 
             onClick={handlePrev}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-650 transition hover:bg-zinc-50 hover:text-zinc-950 active:scale-95 shadow-sm"
@@ -182,7 +182,7 @@ export default function TopCategoriesSection() {
               </div>
 
               {/* Title label */}
-              <h3 className="text-xs sm:text-[13px] font-bold text-zinc-600 mt-4 text-center tracking-tight leading-snug group-hover:text-emerald-600 transition-colors">
+              <h3 className="text-xs sm:text-[13px] font-bold text-zinc-600 mt-2.5 text-center tracking-tight leading-snug group-hover:text-emerald-600 transition-colors">
                 {cat.name}
               </h3>
             </div>
@@ -192,7 +192,7 @@ export default function TopCategoriesSection() {
 
       {/* Bullet dots indicator */}
       {maxIndex > 0 && (
-        <div className="flex items-center justify-center gap-1.5 mt-8">
+        <div className="flex items-center justify-center gap-1.5 mt-3.5">
           {Array.from({ length: maxIndex + 1 }).map((_, i) => (
             <button
               key={i}

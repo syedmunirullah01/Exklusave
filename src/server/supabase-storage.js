@@ -13,9 +13,9 @@ export async function uploadImageBufferToSupabase(buffer, path, contentType) {
     throw new Error("Supabase client is not configured.");
   }
 
-  // Upload file to bucket 'exklusave'
+  // Upload file to bucket 'persuekey'
   const { data, error } = await supabase.storage
-    .from("exklusave")
+    .from("persuekey")
     .upload(path, buffer, {
       contentType: contentType,
       upsert: true,
@@ -27,7 +27,7 @@ export async function uploadImageBufferToSupabase(buffer, path, contentType) {
 
   // Get public URL
   const { data: urlData } = supabase.storage
-    .from("exklusave")
+    .from("persuekey")
     .getPublicUrl(path);
 
   return {

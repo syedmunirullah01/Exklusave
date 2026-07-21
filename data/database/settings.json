@@ -78,21 +78,42 @@
           "id": "hero-slide-1",
           "image": "/banners/banner-1.png",
           "bannerImage": "/banners/banner-1.png",
-          "title": "Mega Seasonal Sale Up to 70% Off",
+          "title": "HK Vitals Super Saver Days",
           "link": "/stores"
         },
         {
           "id": "hero-slide-2",
           "image": "/banners/banner-2.png",
           "bannerImage": "/banners/banner-2.png",
-          "title": "Summer Fashion & Apparel Deals",
-          "link": "/categories"
+          "title": "Flipkart Minutes Sale",
+          "link": "/stores"
         },
         {
           "id": "hero-slide-3",
           "image": "/banners/banner-3.png",
           "bannerImage": "/banners/banner-3.png",
-          "title": "Tech Cyber Sale & Verified Vouchers",
+          "title": "Nykaa Hot Pink Sale",
+          "link": "/stores"
+        },
+        {
+          "id": "hero-slide-4",
+          "image": "/banners/banner-4.png",
+          "bannerImage": "/banners/banner-4.png",
+          "title": "Cyber Tech Sale & Gadget Deals",
+          "link": "/stores"
+        },
+        {
+          "id": "hero-slide-5",
+          "image": "/banners/banner-5.png",
+          "bannerImage": "/banners/banner-5.png",
+          "title": "Summer Fashion Fest 50% Off",
+          "link": "/stores"
+        },
+        {
+          "id": "hero-slide-6",
+          "image": "/banners/banner-6.png",
+          "bannerImage": "/banners/banner-6.png",
+          "title": "Super Grocery Days Cashback",
           "link": "/stores"
         }
       ]
@@ -101,7 +122,7 @@
       "trendingStores": {
         "title": "Trending Stores",
         "selectedStoreSlugs": [],
-        "limit": 5
+        "limit": 13
       },
       "featuredCoupons": {
         "title": "Featured Coupons",
