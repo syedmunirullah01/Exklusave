@@ -6,6 +6,17 @@ import { getSettings } from "@/server/repositories/settings-repository";
 import { getAllStores, getStoreBySlug } from "@/server/repositories/stores-repository";
 import { normalizeCountryCode } from "@/lib/countries";
 
+function isOfferExpired(offer) {
+  if (offer.status === "Expired") return true;
+  if (offer.expiryDate) {
+    const expiry = new Date(offer.expiryDate);
+    // Set to end of day to be safe, e.g. 23:59:59
+    expiry.setHours(23, 59, 59, 999);
+    return new Date() > expiry;
+  }
+  return false;
+}
+
 function buildStoreDirectoryRecord(store) {
   const label = `${store.offersCount} ${store.offersCount === 1 ? "Active Offer" : "Active Offers"}`;
 
@@ -201,12 +212,14 @@ export async function getStoreDirectoryData(search = "", countryCode) {
   const [stores, offers] = await Promise.all([getAllStores(), getAllOffers()]);
   const scopedStores = filterStoresByCountry(stores, countryCode);
   const allowedStoreSlugs = new Set(scopedStores.map((store) => store.slug));
-  const scopedOffers = offers.filter((offer) => allowedStoreSlugs.has(offer.storeSlug));
+  const activeOffers = offers
+    .filter((offer) => allowedStoreSlugs.has(offer.storeSlug))
+    .filter((offer) => !isOfferExpired(offer));
+
   const normalizedSearch = String(search || "").trim().toLowerCase();
   const matchingStoreSlugsFromOffers = normalizedSearch
     ? new Set(
-        scopedOffers
-          .filter((offer) => offer.status?.toLowerCase() !== "expired")
+        activeOffers
           .filter((offer) => doesOfferMatchSearch(offer, normalizedSearch))
           .map((offer) => offer.storeSlug)
       )
@@ -236,7 +249,10 @@ export async function getHomePageData(countryCode) {
   const [stores, offers, products, settings] = await Promise.all([getAllStores(), getAllOffers(), getAllProducts(), getSettings()]);
   const scopedStores = filterStoresByCountry(stores, countryCode);
   const allowedStoreSlugs = new Set(scopedStores.map((store) => store.slug));
-  const scopedOffers = offers.filter((offer) => allowedStoreSlugs.has(offer.storeSlug));
+  const activeOffers = offers
+    .filter((offer) => allowedStoreSlugs.has(offer.storeSlug))
+    .filter((offer) => !isOfferExpired(offer));
+
   const scopedProducts = products.filter((product) => allowedStoreSlugs.has(product.storeSlug));
   const homepageSections = settings.homepage.sections;
 
@@ -252,8 +268,8 @@ export async function getHomePageData(countryCode) {
 
   const featuredOffersSource =
     homepageSections.featuredCoupons.selectedOfferIds?.length
-      ? orderItemsBySelection(scopedOffers, homepageSections.featuredCoupons.selectedOfferIds, (offer) => offer.id)
-      : scopedOffers;
+      ? orderItemsBySelection(activeOffers, homepageSections.featuredCoupons.selectedOfferIds, (offer) => offer.id)
+      : activeOffers;
 
   const featuredProductsSource =
     homepageSections.featuredProducts.selectedProductIds?.length
@@ -331,8 +347,11 @@ export async function getStorePageData(slug, countryCode) {
     (item) => normalizeCountryCode(item.countryCode) === normalizeCountryCode(store.countryCode)
   );
 
+  // Filter out expired offers for public store page details
+  const activeOffers = offers.filter((offer) => !isOfferExpired(offer));
+
   return {
-    ...buildStoreDetail(store, offers, countryMatchedStores),
+    ...buildStoreDetail(store, activeOffers, countryMatchedStores),
     products: products.map((product) => ({
       ...product,
       productUrl: `/stores/${store.categorySlug}/${store.slug}/products/${product.slug}`,
@@ -387,19 +406,21 @@ export async function getStorePageMetadata(slug) {
     return null;
   }
 
+  const activeOffers = offers.filter((offer) => !isOfferExpired(offer));
+
   if (!settings.seo.autoGenerateStoreMetadata) {
     const year = new Date().getFullYear();
     return buildStoreMetadataFallback(
       store,
-      offers,
+      activeOffers,
       {
-        offers: offers.length,
-        coupons: offers.filter((offer) => offer.type === "Coupon").length,
-        deals: offers.filter((offer) => offer.type === "Deal").length,
+        offers: activeOffers.length,
+        coupons: activeOffers.filter((offer) => offer.type === "Coupon").length,
+        deals: activeOffers.filter((offer) => offer.type === "Deal").length,
       },
       year
     );
   }
 
-  return buildAutoStoreMetadata(settings, store, offers);
+  return buildAutoStoreMetadata(settings, store, activeOffers);
 }

@@ -85,13 +85,37 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
 
-  function handleSubmit(e) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setErrorMsg("");
+
+    try {
+      const res = await fetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Unable to send your message. Please try again.");
+      }
       setSent(true);
-    }, 1400);
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -154,12 +178,18 @@ export default function ContactPage() {
               <p className="mt-2 text-sm text-zinc-400">Fill out the form and we'll get back to you within 24 hours.</p>
             </div>
 
+            {errorMsg && (
+              <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200/60 p-4 text-xs font-semibold text-rose-600">
+                {errorMsg}
+              </div>
+            )}
+
             {sent ? (
               <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-emerald-500/30 bg-emerald-50 py-16 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 text-3xl">✓</div>
                 <h3 className="text-xl font-black text-zinc-900">Message Sent!</h3>
                 <p className="text-sm text-zinc-500 max-w-xs">Thank you for reaching out. We'll reply to your email within 24 hours.</p>
-                <button onClick={() => setSent(false)} className="mt-2 rounded-xl border border-zinc-200 px-5 py-2 text-xs font-bold text-zinc-500 hover:border-emerald-500/40 hover:text-emerald-600 transition-colors">
+                <button onClick={() => setSent(false)} className="mt-2 rounded-xl border border-zinc-200 px-5 py-2 text-xs font-bold text-zinc-500 hover:border-emerald-500/40 hover:text-emerald-600 transition-colors cursor-pointer">
                   Send another message
                 </button>
               </div>
@@ -171,6 +201,8 @@ export default function ContactPage() {
                     <input
                       type="text"
                       placeholder="John Doe"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                       required
                       className="h-13 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 text-sm font-medium text-zinc-900 outline-none transition-all placeholder:text-zinc-350 focus:border-emerald-500/50 focus:bg-white focus:ring-3 focus:ring-emerald-500/10"
                     />
@@ -180,6 +212,8 @@ export default function ContactPage() {
                     <input
                       type="email"
                       placeholder="john@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                       className="h-13 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 text-sm font-medium text-zinc-900 outline-none transition-all placeholder:text-zinc-350 focus:border-emerald-500/50 focus:bg-white focus:ring-3 focus:ring-emerald-500/10"
                     />
@@ -191,6 +225,8 @@ export default function ContactPage() {
                   <input
                     type="text"
                     placeholder="How can we help you?"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
                     required
                     className="h-13 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 text-sm font-medium text-zinc-900 outline-none transition-all placeholder:text-zinc-350 focus:border-emerald-500/50 focus:bg-white focus:ring-3 focus:ring-emerald-500/10"
                   />
@@ -201,6 +237,8 @@ export default function ContactPage() {
                   <textarea
                     rows={6}
                     placeholder="Tell us the details of your request..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
                     required
                     className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm font-medium text-zinc-900 outline-none transition-all placeholder:text-zinc-350 focus:border-emerald-500/50 focus:bg-white focus:ring-3 focus:ring-emerald-500/10 resize-none"
                   />
@@ -209,7 +247,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group inline-flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-[11px] font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.01] hover:shadow-emerald-600/35 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="group inline-flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-[11px] font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.01] hover:shadow-emerald-600/35 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? (
                     <>

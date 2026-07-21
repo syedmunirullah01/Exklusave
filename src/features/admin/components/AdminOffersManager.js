@@ -47,7 +47,7 @@ export default function AdminOffersManager() {
 
   async function loadData() {
     const [offersResponse, storesResponse] = await Promise.all([
-      fetch("/api/offers", { cache: "no-store" }),
+      fetch("/api/offers?includeExpired=true", { cache: "no-store" }),
       fetch("/api/stores", { cache: "no-store" }),
     ]);
 
@@ -62,7 +62,7 @@ export default function AdminOffersManager() {
 
     async function hydrateData() {
       const [offersResponse, storesResponse] = await Promise.all([
-        fetch("/api/offers", { cache: "no-store" }),
+        fetch("/api/offers?includeExpired=true", { cache: "no-store" }),
         fetch("/api/stores", { cache: "no-store" }),
       ]);
 
@@ -259,6 +259,18 @@ export default function AdminOffersManager() {
             <TableBody>
               {offers.map((offer) => {
                 const storeLogo = storeLogoMap[offer.storeSlug];
+                
+                // Determine if it is expired based on date or status
+                let isExpired = offer.status === "Expired";
+                if (offer.expiryDate) {
+                  const expiry = new Date(offer.expiryDate);
+                  expiry.setHours(23, 59, 59, 999);
+                  if (new Date() > expiry) {
+                    isExpired = true;
+                  }
+                }
+                const displayStatus = isExpired ? "Expired" : (offer.status || "Active");
+
                 return (
                   <TableRow key={offer.id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition border-b border-zinc-100 dark:border-zinc-800/60">
                     <TableCell>
@@ -314,14 +326,16 @@ export default function AdminOffersManager() {
                     <TableCell>
                       <span
                         className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                          offer.status === "Active"
+                          displayStatus === "Expired"
+                            ? "bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-350 border border-rose-200 dark:border-rose-900"
+                            : displayStatus === "Active"
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
-                            : offer.status === "Scheduled"
+                            : displayStatus === "Scheduled"
                             ? "bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
                             : "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
                         }`}
                       >
-                        {offer.status || "Active"}
+                        {displayStatus}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">

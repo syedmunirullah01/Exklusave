@@ -19,7 +19,9 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const permissions = getPermissionsForRole(session?.user?.role, session?.user?.permissions);
-  const items = PERMISSIONS.filter((item) => canAccessPermission(permissions, item.key));
+  const items = session?.user?.role === "admin"
+    ? PERMISSIONS
+    : PERMISSIONS.filter((item) => canAccessPermission(permissions, item.key));
   const userName = session?.user?.name || (session?.user?.email ? session.user.email.split("@")[0] : "Admin User");
   const userInitial = userName?.charAt(0)?.toUpperCase() || "A";
   const userRole = session?.user?.role || "Administrator";

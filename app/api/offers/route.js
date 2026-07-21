@@ -5,10 +5,27 @@ import { normalizeCountryCode } from "@/lib/countries";
 import { validateOfferPayload } from "@/lib/validators";
 import { requirePermission } from "@/server/auth";
 
+function isOfferExpired(offer) {
+  if (offer.status === "Expired") return true;
+  if (offer.expiryDate) {
+    const expiry = new Date(offer.expiryDate);
+    expiry.setHours(23, 59, 59, 999);
+    return new Date() > expiry;
+  }
+  return false;
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const requestedCountryCode = searchParams.get("country");
-  const offers = await getAllOffers();
+  const includeExpired = searchParams.get("includeExpired") === "true";
+  
+  let offers = await getAllOffers();
+
+  // If not includeExpired, filter out expired offers
+  if (!includeExpired) {
+    offers = offers.filter((offer) => !isOfferExpired(offer));
+  }
 
   if (!requestedCountryCode) {
     return NextResponse.json({ data: offers });
