@@ -106,7 +106,7 @@ export default function OfferCard({ offer, store, index = 0 }) {
   const handleActionClick = (e) => {
     e.preventDefault();
     if (isCoupon && typeof window !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(couponCode).catch(() => {});
+      navigator.clipboard.writeText(couponCode).catch(() => { });
       setCopied(true);
     }
     setIsModalOpen(true);
@@ -120,10 +120,10 @@ export default function OfferCard({ offer, store, index = 0 }) {
     <>
       <article className="group overflow-hidden rounded-2xl sm:rounded-3xl border border-black/8 bg-white p-4 sm:p-7 shadow-sm transition-all duration-300 hover:border-emerald-500/40 hover:shadow-md">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
-          
+
           {/* Left Side: Brand Logo Frame + Offer Info */}
           <div className="flex flex-row items-start sm:items-center gap-3 sm:gap-6 flex-1 min-w-0">
-            
+
             {/* Responsive Logo Frame - Auto Fit Full Box */}
             <div className="grid h-12 w-12 sm:h-20 sm:w-20 shrink-0 place-items-center overflow-hidden rounded-xl sm:rounded-2xl border border-black/8 bg-white p-1 shadow-xs group-hover:scale-105 transition-transform">
               {store.logoImage ? (

@@ -125,9 +125,9 @@ export default function PrivacyPage() {
               <div className="mt-6 border-t border-zinc-100 pt-4">
                 <Link
                   href="/contact"
-                  className="block w-full rounded-xl bg-zinc-900 py-2.5 text-center text-xs font-bold text-white transition hover:bg-emerald-600"
+                  className="block w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 py-3 text-center text-xs font-extrabold text-white shadow-sm transition-all hover:scale-[1.02] active:scale-95"
                 >
-                  Contact Support
+                  Contact Privacy Support →
                 </Link>
               </div>
             </div>

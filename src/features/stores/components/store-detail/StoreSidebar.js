@@ -21,7 +21,7 @@ function getStoreRatingInfo(singleStore) {
 
   const countMatch = rawRating.match(/([1-9]\d*k?)\s*reviews/i);
   let reviewsText = "";
-  
+
   if (countMatch && countMatch[1] !== "0") {
     reviewsText = `${countMatch[1]} reviews`;
   } else {
@@ -53,10 +53,10 @@ export default function StoreSidebar({ singleStore, relatedStores = [] }) {
 
   return (
     <aside className="w-full space-y-4 sm:space-y-5 lg:w-[280px] lg:shrink-0">
-      
+
       {/* Primary Brand Card */}
       <div className="group rounded-2xl sm:rounded-3xl border border-black/8 bg-white p-5 sm:p-6 shadow-sm space-y-4 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-md">
-        
+
         {/* Auto-Fit Featured Logo Box */}
         <div className="relative w-full h-24 sm:h-28 overflow-hidden rounded-2xl border border-black/8 bg-zinc-50/90 p-3 flex items-center justify-center shadow-inner group-hover:bg-white transition-colors">
           {singleStore.logoImage ? (

@@ -25,7 +25,7 @@ export default function CouponModal({ isOpen, onClose, offer, store }) {
 
   const handleCopy = () => {
     if (couponCode && typeof window !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(couponCode).catch(() => {});
+      navigator.clipboard.writeText(couponCode).catch(() => { });
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     }
@@ -33,16 +33,16 @@ export default function CouponModal({ isOpen, onClose, offer, store }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      
+
       {/* Backdrop overlay click to close */}
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Modal Dialog Card */}
       <div className="relative z-10 w-full max-w-md sm:max-w-lg overflow-hidden rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-black/8 space-y-6 animate-in zoom-in-95 duration-200">
-        
+
         {/* Top Header Row: Logo Avatar + Offer Title + Close Icon */}
         <div className="flex items-start gap-4 pr-8">
-          
+
           {/* Logo Frame */}
           <div className="grid h-16 w-16 sm:h-20 sm:w-20 shrink-0 place-items-center overflow-hidden rounded-2xl border border-black/8 bg-white p-1 shadow-xs">
             {store.logoImage ? (
