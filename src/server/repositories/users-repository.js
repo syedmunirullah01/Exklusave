@@ -1,10 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
+import os from "os";
 import bcrypt from "bcryptjs";
 import { supabase } from "@/lib/supabase";
 import { getPermissionsForRole } from "@/lib/access-control";
 
 const USERS_FILE_PATH = path.join(process.cwd(), "data", "database", "users.json");
+const TMP_USERS_FILE_PATH = path.join(os.tmpdir(), "persuekey_users.json");
 
 const DEFAULT_ADMIN_USER = {
   id: "usr_admin_master",
@@ -18,21 +20,28 @@ const DEFAULT_ADMIN_USER = {
   updatedAt: new Date().toISOString(),
 };
 
-async function ensureUsersFile() {
+async function safeWriteUsers(users) {
+  const content = JSON.stringify(users, null, 2);
   try {
-    await fs.mkdir(path.dirname(USERS_FILE_PATH), { recursive: true });
-    try {
-      await fs.access(USERS_FILE_PATH);
-    } catch {
-      await fs.writeFile(USERS_FILE_PATH, JSON.stringify([DEFAULT_ADMIN_USER], null, 2), "utf-8");
-    }
+    await fs.writeFile(USERS_FILE_PATH, content, "utf-8");
   } catch (err) {
-    console.error("Error creating users.json file:", err);
+    try {
+      await fs.writeFile(TMP_USERS_FILE_PATH, content, "utf-8");
+    } catch (tmpErr) {
+      console.warn("Serverless filesystem save fallback:", tmpErr.message);
+    }
   }
 }
 
 export async function getUsers() {
-  await ensureUsersFile();
+  try {
+    const tmpRaw = await fs.readFile(TMP_USERS_FILE_PATH, "utf-8");
+    const tmpUsers = JSON.parse(tmpRaw);
+    if (Array.isArray(tmpUsers) && tmpUsers.length > 0) {
+      return tmpUsers;
+    }
+  } catch {}
+
   try {
     const raw = await fs.readFile(USERS_FILE_PATH, "utf-8");
     const users = JSON.parse(raw);
@@ -91,7 +100,7 @@ export async function createUser(userData) {
   }
 
   users.unshift(newUser);
-  await fs.writeFile(USERS_FILE_PATH, JSON.stringify(users, null, 2), "utf-8");
+  await safeWriteUsers(users);
   return newUser;
 }
 
@@ -140,7 +149,7 @@ export async function updateUser(id, updates) {
   }
 
   users[index] = updatedUser;
-  await fs.writeFile(USERS_FILE_PATH, JSON.stringify(users, null, 2), "utf-8");
+  await safeWriteUsers(users);
   return updatedUser;
 }
 
@@ -156,6 +165,6 @@ export async function deleteUser(id) {
     }
   }
 
-  await fs.writeFile(USERS_FILE_PATH, JSON.stringify(filtered, null, 2), "utf-8");
+  await safeWriteUsers(filtered);
   return true;
 }

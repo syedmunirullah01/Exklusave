@@ -60,7 +60,16 @@ export async function POST(req) {
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const targetPath = path.join(PUBLIC_DIR, fileName);
-    await fs.writeFile(targetPath, buffer);
+    try {
+      await fs.writeFile(targetPath, buffer);
+    } catch (err) {
+      if (err.code === "EROFS" || err.message?.includes("read-only")) {
+        return NextResponse.json({
+          error: "Vercel serverless environment file system is read-only. File could not be saved to disk.",
+        }, { status: 400 });
+      }
+      throw err;
+    }
 
     return NextResponse.json({
       success: true,
@@ -85,7 +94,16 @@ export async function PUT(req) {
     const safeName = fileName.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
     const targetPath = path.join(PUBLIC_DIR, safeName);
 
-    await fs.writeFile(targetPath, content, "utf-8");
+    try {
+      await fs.writeFile(targetPath, content, "utf-8");
+    } catch (err) {
+      if (err.code === "EROFS" || err.message?.includes("read-only")) {
+        return NextResponse.json({
+          error: "Vercel serverless environment file system is read-only. File could not be updated on disk.",
+        }, { status: 400 });
+      }
+      throw err;
+    }
 
     return NextResponse.json({
       success: true,
@@ -110,7 +128,16 @@ export async function DELETE(req) {
     const safeName = fileName.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
     const targetPath = path.join(PUBLIC_DIR, safeName);
 
-    await fs.unlink(targetPath);
+    try {
+      await fs.unlink(targetPath);
+    } catch (err) {
+      if (err.code === "EROFS" || err.message?.includes("read-only")) {
+        return NextResponse.json({
+          error: "Vercel serverless environment file system is read-only.",
+        }, { status: 400 });
+      }
+      throw err;
+    }
 
     return NextResponse.json({
       success: true,
