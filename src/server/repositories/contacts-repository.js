@@ -38,10 +38,12 @@ export async function createContact(payload) {
 
   // Create real-time notification
   try {
-    await createNotification(
-      "contact",
-      `New support message from ${newContact.name}: "${newContact.subject}"`
-    );
+    const isSubmission = newContact.subject?.includes("Coupon Submission");
+    const notifMsg = isSubmission
+      ? `🎁 New Coupon Submitted: "${newContact.subject}"`
+      : `New support message from ${newContact.name}: "${newContact.subject}"`;
+
+    await createNotification("contact", notifMsg);
   } catch (err) {
     console.error("Failed to generate contact notification:", err);
   }

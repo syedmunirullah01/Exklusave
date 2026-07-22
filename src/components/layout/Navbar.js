@@ -192,7 +192,7 @@ export default function Navbar() {
 
           {/* Submit a Coupon Button */}
           <Link
-            href="/contact"
+            href="/submit-coupon"
             className="hidden lg:inline-flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-[11px] font-bold text-white px-4 py-2 shadow-xs transition-all tracking-wide"
           >
             Submit a Coupon
@@ -243,7 +243,7 @@ export default function Navbar() {
               />
             </form>
             <Link
-              href="/contact"
+              href="/submit-coupon"
               onClick={() => setMobileOpen(false)}
               className="mt-3 flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white py-3 transition shadow-xs"
             >

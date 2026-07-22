@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/AppModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, useDialogA11yIds } from "@/components/ui/Dialog";
@@ -10,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import AdminTopbar from "@/features/admin/components/AdminTopbar";
 
 export default function AdminMessagesPage() {
-  const [activeTab, setActiveTab] = useState("contacts"); // "contacts" | "subscribers"
+  const [activeTab, setActiveTab] = useState("submissions"); // "submissions" | "contacts" | "subscribers"
   const [messages, setMessages] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,16 +21,16 @@ export default function AdminMessagesPage() {
   async function loadData() {
     setIsLoading(true);
     try {
-      if (activeTab === "contacts") {
-        const res = await fetch("/api/contacts", { cache: "no-store" });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Unable to load messages.");
-        setMessages(json.data || []);
-      } else {
+      if (activeTab === "subscribers") {
         const res = await fetch("/api/subscribers", { cache: "no-store" });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Unable to load subscribers.");
         setSubscribers(json.data || []);
+      } else {
+        const res = await fetch("/api/contacts", { cache: "no-store" });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Unable to load messages.");
+        setMessages(json.data || []);
       }
     } catch (err) {
       toast.error(err.message);
@@ -48,15 +47,15 @@ export default function AdminMessagesPage() {
     if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      const endpoint = activeTab === "contacts" 
-        ? `/api/contacts/${deleteTarget.id}` 
-        : `/api/subscribers/${deleteTarget.id}`;
+      const endpoint = activeTab === "subscribers" 
+        ? `/api/subscribers/${deleteTarget.id}` 
+        : `/api/contacts/${deleteTarget.id}`;
 
       const res = await fetch(endpoint, { method: "DELETE" });
       if (!res.ok) {
         throw new Error("Deletion failed.");
       }
-      toast.success(activeTab === "contacts" ? "Message deleted." : "Subscriber removed.");
+      toast.success(activeTab === "subscribers" ? "Subscriber removed." : "Item deleted.");
       setDeleteTarget(null);
       await loadData();
     } catch (err) {
@@ -66,33 +65,57 @@ export default function AdminMessagesPage() {
     }
   }
 
+  const couponSubmissions = messages.filter((m) => m.subject?.includes("Coupon Submission"));
+  const contactMessages = messages.filter((m) => !m.subject?.includes("Coupon Submission"));
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-16 font-sans antialiased">
-      <AdminTopbar title="Messages & Signups" breadcrumbTrail={["Admin", "Inbox"]} />
+      <AdminTopbar title="Messages & Submissions" breadcrumbTrail={["Admin", "Inbox"]} />
 
       <main className="mx-auto max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
         
         {/* Tab Controls */}
-        <div className="flex border-b border-zinc-800 gap-1.5 p-1 bg-zinc-900/60 rounded-xl w-fit">
+        <div className="flex border-b border-zinc-800 gap-1.5 p-1 bg-zinc-900/60 rounded-xl w-fit flex-wrap">
+          <button
+            onClick={() => setActiveTab("submissions")}
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === "submissions"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <span>🎁 User Coupon Submissions</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-black/30 text-[10px]">
+              {couponSubmissions.length}
+            </span>
+          </button>
+
           <button
             onClick={() => setActiveTab("contacts")}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === "contacts"
                 ? "bg-emerald-600 text-white shadow-xs"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
-            Contact Messages ({messages.length})
+            <span>Contact Messages</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-black/30 text-[10px]">
+              {contactMessages.length}
+            </span>
           </button>
+
           <button
             onClick={() => setActiveTab("subscribers")}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === "subscribers"
                 ? "bg-emerald-600 text-white shadow-xs"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
-            Newsletter Subscribers ({subscribers.length})
+            <span>Newsletter Subscribers</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-black/30 text-[10px]">
+              {subscribers.length}
+            </span>
           </button>
         </div>
 
@@ -100,12 +123,18 @@ export default function AdminMessagesPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-4 mb-6">
             <div>
               <h3 className="text-base font-bold text-white">
-                {activeTab === "contacts" ? "Contact Message Submissions" : "Newsletter Subscription List"}
+                {activeTab === "submissions" 
+                  ? "User Submitted Coupons & Deals" 
+                  : activeTab === "contacts" 
+                    ? "Contact Message Submissions" 
+                    : "Newsletter Subscription List"}
               </h3>
               <p className="mt-0.5 text-xs text-zinc-400">
-                {activeTab === "contacts" 
-                  ? "View partnership requests, help desk queries, and contact forms filled by users." 
-                  : "List of users who subscribed to the Persuekey newsletter feed."}
+                {activeTab === "submissions"
+                  ? "Review community submitted discount codes, verify stores, and add them to active catalog."
+                  : activeTab === "contacts" 
+                    ? "View partnership requests, help desk queries, and contact forms filled by users." 
+                    : "List of users who subscribed to the Persuekey newsletter feed."}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -119,8 +148,78 @@ export default function AdminMessagesPage() {
             <div className="flex min-h-48 items-center justify-center text-xs font-semibold text-zinc-500">
               Loading data...
             </div>
+          ) : activeTab === "submissions" ? (
+            couponSubmissions.length ? (
+              <div className="overflow-x-auto rounded-xl border border-zinc-800">
+                <Table>
+                  <TableHeader className="bg-zinc-800/60">
+                    <TableRow>
+                      <TableHead className="text-zinc-300 font-bold text-xs">Target Store</TableHead>
+                      <TableHead className="text-zinc-300 font-bold text-xs">Details / Code</TableHead>
+                      <TableHead className="text-zinc-300 font-bold text-xs">Submitted By</TableHead>
+                      <TableHead className="text-zinc-300 font-bold text-xs">Received At</TableHead>
+                      <TableHead className="text-right text-zinc-300 font-bold text-xs">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-zinc-800">
+                    {couponSubmissions.map((msg) => (
+                      <tr key={msg.id} className="hover:bg-zinc-800/40 transition">
+                        <TableCell>
+                          <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 text-xs font-black text-emerald-400">
+                            {msg.subject.replace("Coupon Submission for ", "")}
+                          </span>
+                        </TableCell>
+                        <TableCell className="max-w-md">
+                          <p className="text-xs font-medium text-zinc-200 line-clamp-2 whitespace-pre-wrap">{msg.message}</p>
+                        </TableCell>
+                        <TableCell>
+                          <p className="text-xs font-mono font-medium text-zinc-300">{msg.email}</p>
+                        </TableCell>
+                        <TableCell className="text-xs text-zinc-400 font-medium">
+                          {new Date(msg.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedMessage(msg)}
+                              className="h-8 text-xs font-semibold border-zinc-700"
+                            >
+                              View Submission
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => setDeleteTarget(msg)}
+                              className="h-8 text-xs font-semibold text-rose-400 hover:bg-rose-950/50"
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </tr>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-800/30 px-6 py-12 text-center">
+                <h3 className="text-sm font-bold text-white">No Coupon Submissions Yet</h3>
+                <p className="mt-1 text-xs text-zinc-400">
+                  When users submit discount codes from /submit-coupon, they will appear in this table.
+                </p>
+              </div>
+            )
           ) : activeTab === "contacts" ? (
-            messages.length ? (
+            contactMessages.length ? (
               <div className="overflow-x-auto rounded-xl border border-zinc-800">
                 <Table>
                   <TableHeader className="bg-zinc-800/60">
@@ -133,7 +232,7 @@ export default function AdminMessagesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-zinc-800">
-                    {messages.map((msg) => (
+                    {contactMessages.map((msg) => (
                       <tr key={msg.id} className="hover:bg-zinc-800/40 transition">
                         <TableCell>
                           <div>
@@ -162,7 +261,7 @@ export default function AdminMessagesPage() {
                               onClick={() => setSelectedMessage(msg)}
                               className="h-8 text-xs font-semibold border-zinc-700"
                             >
-                              View Full Message
+                              View Message
                             </Button>
                             <Button
                               type="button"
@@ -182,7 +281,7 @@ export default function AdminMessagesPage() {
               </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-800/30 px-6 py-12 text-center">
-                <h3 className="text-sm font-bold text-white">No Messages Found</h3>
+                <h3 className="text-sm font-bold text-white">No Contact Messages Found</h3>
                 <p className="mt-1 text-xs text-zinc-400">
                   Any contact form submission will automatically appear here.
                 </p>
@@ -239,26 +338,21 @@ export default function AdminMessagesPage() {
         </div>
       </main>
 
-      {/* View Full Message Dialog */}
+      {/* View Details Dialog */}
       <Dialog open={Boolean(selectedMessage)} onOpenChange={() => setSelectedMessage(null)}>
         <DialogContent aria-labelledby={titleId} aria-describedby={descriptionId} className="max-w-xl bg-zinc-900 border-zinc-800 text-white">
           <DialogHeader>
             <DialogTitle id={titleId} className="text-base font-bold text-white">
-              Message from {selectedMessage?.name}
+              {selectedMessage?.subject}
             </DialogTitle>
             <DialogDescription id={descriptionId} className="text-xs text-zinc-400">
-              Sender Email: <span className="font-mono text-emerald-400">{selectedMessage?.email}</span>
+              Submitted By: <span className="font-mono text-emerald-400">{selectedMessage?.email}</span>
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
             <div className="bg-zinc-950 border border-zinc-850 p-4 rounded-xl">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Subject</span>
-              <p className="text-xs font-bold text-white mt-1">{selectedMessage?.subject}</p>
-            </div>
-
-            <div className="bg-zinc-950 border border-zinc-850 p-4 rounded-xl">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Message Body</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Submission Content</span>
               <p className="text-xs text-zinc-200 mt-2 whitespace-pre-wrap leading-relaxed">
                 {selectedMessage?.message}
               </p>
@@ -285,13 +379,9 @@ export default function AdminMessagesPage() {
             setDeleteTarget(null);
           }
         }}
-        title={activeTab === "contacts" ? "Delete Contact Message" : "Remove Subscriber"}
-        description={
-          activeTab === "contacts"
-            ? "Are you sure you want to delete this message? This action cannot be undone."
-            : "Are you sure you want to remove this email address from the subscribers list?"
-        }
-        confirmLabel={activeTab === "contacts" ? "Delete Message" : "Remove Email"}
+        title="Confirm Deletion"
+        description="Are you sure you want to delete this record? This action cannot be undone."
+        confirmLabel="Delete Record"
         cancelLabel="Cancel"
         onConfirm={handleDeleteConfirmed}
         isSubmitting={isDeleting}

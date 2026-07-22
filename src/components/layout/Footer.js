@@ -28,6 +28,7 @@ const quickLinks = [
   { label: "Home", href: "/" },
   { label: "All Stores", href: "/stores" },
   { label: "Categories", href: "/categories" },
+  { label: "Submit a Coupon", href: "/submit-coupon" },
   { label: "Blogs", href: "/blogs" },
   { label: "Contact Us", href: "/contact" },
   { label: "About Us", href: "/about" },
