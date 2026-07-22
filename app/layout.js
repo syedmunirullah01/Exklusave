@@ -28,6 +28,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <CustomMarkup markup={settings.seo?.customMetaTags} />
         <CustomMarkup markup={settings.general?.customHeadScript} />
       </head>

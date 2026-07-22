@@ -47,6 +47,9 @@ export async function getMetadataDefaults(pageTitle, overrides = {}) {
       description: openGraphDescription,
     },
     robots: settings.seo?.robots || "index,follow",
+    icons: {
+      icon: "/favicon.svg",
+    },
     verification,
   };
 }

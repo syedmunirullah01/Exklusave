@@ -90,45 +90,42 @@ export async function POST(request) {
     for (const [index, row] of rows.entries()) {
       const rowNumber = index + 2;
       const name = normalizeValue(row.name);
-      const category = normalizeValue(row.category) || "General";
-      const description = normalizeValue(row.description);
-      const trustStatusRaw = normalizeValue(row.trustStatus);
-      const logoText = normalizeValue(row.logoText);
-      const affiliateLink = normalizeValue(row.affiliateLink);
-      const logoFile = normalizeValue(row.logoFile);
-      const countryCode = normalizeCountryCode(row.countryCode || row.country);
-      const slug = slugify(normalizeValue(row.slug) || name);
-      const matchedCategory = categoryMap.get(category.toLowerCase());
-
       if (!name) {
         errors.push({ rowNumber, reason: "Store name is required." });
         continue;
       }
 
+      const slug = slugify(normalizeValue(row.slug) || name);
       if (!slug) {
         errors.push({ rowNumber, reason: "Slug could not be generated." });
         continue;
       }
 
-      if (normalizeValue(row.slug) && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizeValue(row.slug))) {
-        errors.push({ rowNumber, reason: "Slug contains illegal characters." });
-        continue;
+      const category = normalizeValue(row.category) || "General";
+      const catNorm = category.toLowerCase();
+      let matchedCategory = categoryMap.get(catNorm);
+      if (!matchedCategory && categories && categories.length > 0) {
+        matchedCategory = categories.find(
+          (c) => normalizeValue(c.slug).toLowerCase() === catNorm || normalizeValue(c.name).toLowerCase() === catNorm
+        ) || categories[0];
+      } else if (!matchedCategory) {
+        matchedCategory = { name: category, slug: slugify(category) };
       }
 
-      if (!matchedCategory) {
-        errors.push({ rowNumber, reason: "Category must match an existing managed category." });
-        continue;
+      let description = normalizeValue(row.description);
+      if (description.length < 10) {
+        description = `${name} verified promo codes, coupons, and savings deals on Persuekey.`;
       }
 
-      if (description.length < 20) {
-        errors.push({ rowNumber, reason: "Description should be at least 20 characters." });
-        continue;
+      let countryCode = normalizeCountryCode(row.countryCode || row.country || "US");
+      if (allowedCountryCodes.size > 0 && !allowedCountryCodes.has(countryCode)) {
+        countryCode = Array.from(allowedCountryCodes)[0] || "US";
       }
 
-      if (!allowedCountryCodes.has(countryCode)) {
-        errors.push({ rowNumber, reason: "Country code is not available in settings." });
-        continue;
-      }
+      const trustStatusRaw = normalizeValue(row.trustStatus);
+      const logoText = normalizeValue(row.logoText);
+      const affiliateLink = normalizeValue(row.affiliateLink);
+      const logoFile = normalizeValue(row.logoFile);
 
       if (existingSlugs.has(slug)) {
         duplicatesSkipped += 1;

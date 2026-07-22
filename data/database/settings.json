@@ -75,17 +75,17 @@
       "memberCountText": "Join 126k+ members saving daily",
       "slides": [
         {
-          "id": "hero-slide-1",
-          "image": "/banners/banner-1.png",
-          "bannerImage": "/banners/banner-1.png",
-          "title": "HK Vitals Super Saver Days",
-          "link": "/stores"
-        },
-        {
           "id": "hero-slide-2",
           "image": "/banners/banner-2.png",
           "bannerImage": "/banners/banner-2.png",
           "title": "Flipkart Minutes Sale",
+          "link": "/stores"
+        },
+        {
+          "id": "hero-slide-1",
+          "image": "/banners/banner-1.png",
+          "bannerImage": "/banners/banner-1.png",
+          "title": "HK Vitals Super Saver Days",
           "link": "/stores"
         },
         {
@@ -103,17 +103,21 @@
           "link": "/stores"
         },
         {
-          "id": "hero-slide-5",
-          "image": "/banners/banner-5.png",
-          "bannerImage": "/banners/banner-5.png",
-          "title": "Summer Fashion Fest 50% Off",
-          "link": "/stores"
-        },
-        {
           "id": "hero-slide-6",
           "image": "/banners/banner-6.png",
           "bannerImage": "/banners/banner-6.png",
           "title": "Super Grocery Days Cashback",
+          "link": "/stores"
+        },
+        {
+          "id": "hero-slide-1784756873557",
+          "image": "https://adpcvledhwyhaqzgeyib.supabase.co/storage/v1/object/public/persuekey/banners/banner-1784756897437-yfasf.png",
+          "badge": "PROMO DEAL • LIVE NOW",
+          "kicker": "SPECIAL OFFER",
+          "title": "New Promo Campaign",
+          "description": "Description of your promotional campaign.",
+          "discount": "-30% OFF",
+          "code": "DEAL30",
           "link": "/stores"
         }
       ]
@@ -121,7 +125,21 @@
     "sections": {
       "trendingStores": {
         "title": "Trending Stores",
-        "selectedStoreSlugs": [],
+        "selectedStoreSlugs": [
+          "apple",
+          "wandernana",
+          "esmi",
+          "lokai",
+          "mixhers",
+          "nanoleaf",
+          "bigdug",
+          "bodily",
+          "dorsey",
+          "club-l-london",
+          "viori",
+          "cult-gaia",
+          "nike-store"
+        ],
         "limit": 13
       },
       "featuredCoupons": {

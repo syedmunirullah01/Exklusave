@@ -52,8 +52,19 @@ export default function StoreDirectoryPage({ breadcrumbItems = ["Home", "Stores"
       }
 
       // 2. Category Filter
-      if (selectedCategory !== "all" && store.categorySlug !== selectedCategory) {
-        return false;
+      if (selectedCategory !== "all") {
+        const catObj = categories.find((c) => c.slug === selectedCategory);
+        const selSlug = (selectedCategory || "").toLowerCase().trim();
+        const selName = (catObj?.name || "").toLowerCase().trim();
+        const storeCatSlug = (store.categorySlug || "").toLowerCase().trim();
+        const storeCatName = (store.category || store.categoryName || "").toLowerCase().trim();
+
+        const isMatch =
+          (selSlug && storeCatSlug === selSlug) ||
+          (selName && storeCatName === selName) ||
+          (selSlug && storeCatName === selSlug);
+
+        if (!isMatch) return false;
       }
 
       // 3. Alphabet Letter Filter
@@ -68,7 +79,7 @@ export default function StoreDirectoryPage({ breadcrumbItems = ["Home", "Stores"
 
       return true;
     });
-  }, [stores, query, selectedCategory, selectedLetter]);
+  }, [stores, query, selectedCategory, selectedLetter, categories]);
 
   const STORES_PER_PAGE = 12;
   const totalPages = Math.ceil(filteredStores.length / STORES_PER_PAGE) || 1;
@@ -80,7 +91,17 @@ export default function StoreDirectoryPage({ breadcrumbItems = ["Home", "Stores"
   const categoriesWithCounts = useMemo(() => {
     const list = [{ name: "All Categories", slug: "all", count: stores.length }];
     categories.forEach((cat) => {
-      const count = stores.filter((s) => s.categorySlug === cat.slug).length;
+      const catSlug = (cat.slug || "").toLowerCase().trim();
+      const catName = (cat.name || "").toLowerCase().trim();
+      const count = stores.filter((s) => {
+        const storeCatSlug = (s.categorySlug || "").toLowerCase().trim();
+        const storeCatName = (s.category || s.categoryName || "").toLowerCase().trim();
+        return (
+          (catSlug && storeCatSlug === catSlug) ||
+          (catName && storeCatName === catName) ||
+          (catSlug && storeCatName === catSlug)
+        );
+      }).length;
       list.push({ ...cat, count });
     });
     return list;

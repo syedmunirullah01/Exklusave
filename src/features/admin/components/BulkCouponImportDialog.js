@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, us
 import { cn } from "@/lib/utils";
 
 const TEMPLATE_HEADERS = ["storeSlug", "title", "description", "type", "code", "expiryDate", "status", "source", "affiliateLink"];
-const REQUIRED_FIELDS = ["storeSlug", "title", "type"];
+const REQUIRED_FIELDS = ["storeSlug", "title"];
 
 function Spinner() {
   return (
@@ -21,38 +21,12 @@ function Spinner() {
   );
 }
 
-function isValidDateString(value) {
-  if (!value) {
-    return true;
-  }
-
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) {
-    const [month, day, year] = value.split("/").map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
-  }
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-
-  const date = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
-
-function normalizeExpiryDate(value) {
-  const normalized = normalizeCsvValue(value);
-
-  if (!normalized) {
-    return "";
-  }
-
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(normalized)) {
-    const [month, day, year] = normalized.split("/").map(Number);
-    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  }
-
-  return normalized;
+function slugify(value) {
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function normalizeCsvValue(value) {
@@ -71,27 +45,46 @@ function buildDuplicateKey({ storeSlug, title, type, description, expiryDate, st
   ].join("::");
 }
 
-function normalizeType(value) {
+function normalizeType(value, code) {
   const normalized = normalizeCsvValue(value).toLowerCase();
-  return normalized === "deal" ? "Deal" : normalized === "coupon" ? "Coupon" : "";
+  if (normalized === "deal") return "Deal";
+  if (normalized === "coupon") return "Coupon";
+  return code ? "Coupon" : "Deal";
 }
 
 function normalizeStatus(value) {
   const normalized = normalizeCsvValue(value).toLowerCase();
-
-  if (normalized === "expired") {
-    return "Expired";
-  }
-
-  if (normalized === "scheduled") {
-    return "Scheduled";
-  }
-
-  if (normalized === "ending soon") {
-    return "Ending soon";
-  }
-
+  if (normalized === "expired") return "Expired";
+  if (normalized === "scheduled") return "Scheduled";
+  if (normalized === "ending soon") return "Ending soon";
   return "Active";
+}
+
+function isValidDateString(value) {
+  if (!value) return true;
+
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) {
+    const [month, day, year] = value.split("/").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function normalizeExpiryDate(value) {
+  const normalized = normalizeCsvValue(value);
+  if (!normalized) return "";
+
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(normalized)) {
+    const [month, day, year] = normalized.split("/").map(Number);
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  return normalized;
 }
 
 function parseCsvFile(input) {
@@ -105,7 +98,7 @@ function parseCsvFile(input) {
   });
 }
 
-export default function BulkCouponImportDialog({ open, onOpenChange, stores, offers = [], onImported }) {
+export default function BulkCouponImportDialog({ open, onOpenChange, stores = [], offers = [], onImported }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFileContent, setSelectedFileContent] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -118,11 +111,15 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
   const fileInputRef = useRef(null);
   const { titleId, descriptionId } = useDialogA11yIds();
 
-  const storesBySlug = useMemo(() => new Map(stores.map((store) => [store.slug, store])), [stores]);
+  const storesBySlug = useMemo(() => new Map((stores || []).map((store) => [store.slug, store])), [stores]);
+  const storesByNameMap = useMemo(
+    () => new Map((stores || []).map((store) => [String(store.name || "").toLowerCase().trim(), store])),
+    [stores]
+  );
   const existingDuplicateKeys = useMemo(
     () =>
       new Set(
-        offers.map((offer) =>
+        (offers || []).map((offer) =>
           buildDuplicateKey({
             storeSlug: offer.storeSlug,
             title: offer.title,
@@ -140,15 +137,11 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
   function resetState() {
     setSelectedFile(null);
     setSelectedFileContent("");
-    setSummaryState();
-    setIsDragging(false);
-  }
-
-  function setSummaryState() {
     setDryRunSummary(null);
     setFinalSummary(null);
     setValidRows([]);
     setErrors([]);
+    setIsDragging(false);
   }
 
   function handleOpenChange(nextOpen) {
@@ -175,38 +168,18 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
     URL.revokeObjectURL(url);
   }
 
-  async function selectFile(file) {
-    if (!file) {
-      return;
-    }
-
-    const isCsvFile = file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv");
-    if (!isCsvFile) {
-      toast.error("Only CSV files are supported.");
-      return;
-    }
-
-    try {
-      const content = await file.text();
-      setSelectedFile(file);
-      setSelectedFileContent(content);
-      setSummaryState();
-    } catch {
-      toast.error("CSV file could not be read. Save and close the spreadsheet, then select it again.");
-    }
-  }
-
-  async function runDryValidation() {
-    if (!selectedFile) {
-      toast.error("Choose a CSV file first.");
-      return;
-    }
+  async function processAndValidateFile(file, contentOverride) {
+    if (!file) return;
 
     setIsValidating(true);
-    setSummaryState();
+    setDryRunSummary(null);
+    setFinalSummary(null);
+    setValidRows([]);
+    setErrors([]);
 
     try {
-      const results = await parseCsvFile(selectedFileContent || selectedFile);
+      const csvSource = contentOverride || (await file.text());
+      const results = await parseCsvFile(csvSource);
       const headers = Array.isArray(results.meta?.fields) ? results.meta.fields.map((field) => field.trim()) : [];
       const missingHeaders = REQUIRED_FIELDS.filter((header) => !headers.includes(header));
 
@@ -223,7 +196,7 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
           duplicates: 0,
           validationErrors: headerErrors.length,
         });
-        toast.error("CSV template headers are invalid.");
+        toast.error("CSV template missing 'storeSlug' or 'title' header.");
         return;
       }
 
@@ -232,44 +205,51 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
       const nextValidRows = [];
       const csvDuplicateKeys = new Set();
       let duplicates = 0;
-
-      let fallbackStoreSlug = "";
+      let fallbackStoreSlug = stores && stores[0]?.slug ? stores[0].slug : "";
 
       parsedRows.forEach((row, index) => {
         const rowNumber = index + 2;
-        const storeSlug = normalizeCsvValue(row.storeSlug).toLowerCase() || fallbackStoreSlug;
+        const rawStoreSlug = normalizeCsvValue(row.storeSlug);
+        let storeSlug = slugify(rawStoreSlug) || fallbackStoreSlug;
         const title = normalizeCsvValue(row.title);
-        const description = normalizeCsvValue(row.description);
-        const type = normalizeType(row.type);
-        const code = normalizeCsvValue(row.code);
-        const expiryDate = normalizeExpiryDate(row.expiryDate);
-        const status = normalizeStatus(row.status);
-        const source = normalizeCsvValue(row.source) || "Manual";
-        const affiliateLink = normalizeCsvValue(row.affiliateLink);
 
         if (storeSlug) {
           fallbackStoreSlug = storeSlug;
         }
 
-        const missingField = REQUIRED_FIELDS.find((field) => !({ storeSlug, title, type })[field]);
-        if (missingField) {
-          clientErrors.push({ rowNumber, reason: `Missing required field: ${missingField}` });
+        if (!title) {
+          clientErrors.push({ rowNumber, reason: "Offer title is required." });
           return;
         }
 
-        if (type === "Coupon" && !code) {
-          clientErrors.push({ rowNumber, reason: "Coupon rows require a code." });
+        // Smart Store Matching (By Slug, Name, or Fallback First Store)
+        let store = storesBySlug.get(storeSlug) || storesByNameMap.get(rawStoreSlug.toLowerCase());
+        if (!store && stores && stores.length > 0) {
+          store = stores[0];
+          storeSlug = store.slug;
+        }
+
+        if (!store) {
+          clientErrors.push({ rowNumber, reason: `No managed store found for "${rawStoreSlug}".` });
           return;
         }
+
+        let code = normalizeCsvValue(row.code);
+        const type = normalizeType(row.type, code);
+
+        // Smart Code Fallback for Coupons
+        if (type === "Coupon" && !code) {
+          code = `${storeSlug.toUpperCase()}SAVE`;
+        }
+
+        const description = normalizeCsvValue(row.description) || `${title} at ${store.name}.`;
+        const expiryDate = normalizeExpiryDate(row.expiryDate);
+        const status = normalizeStatus(row.status);
+        const source = normalizeCsvValue(row.source) || "Manual";
+        const affiliateLink = normalizeCsvValue(row.affiliateLink) || store.affiliateLink || "";
 
         if (!isValidDateString(expiryDate)) {
           clientErrors.push({ rowNumber, reason: "Expiry date must use YYYY-MM-DD or MM/DD/YYYY format." });
-          return;
-        }
-
-        const store = storesBySlug.get(storeSlug);
-        if (!store) {
-          clientErrors.push({ rowNumber, reason: `Store "${storeSlug}" does not exist.` });
           return;
         }
 
@@ -280,8 +260,9 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
           description,
           expiryDate,
           status,
-          affiliateLink: affiliateLink || store.affiliateLink || "",
+          affiliateLink,
         });
+
         if (existingDuplicateKeys.has(duplicateKey)) {
           duplicates += 1;
           clientErrors.push({ rowNumber, reason: "This offer already exists in the catalog." });
@@ -290,7 +271,7 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
 
         if (csvDuplicateKeys.has(duplicateKey)) {
           duplicates += 1;
-          clientErrors.push({ rowNumber, reason: "Duplicate offer content found within the same CSV file." });
+          clientErrors.push({ rowNumber, reason: "Duplicate offer content found in CSV." });
           return;
         }
 
@@ -304,7 +285,7 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
           expiryDate,
           status,
           source,
-          affiliateLink: affiliateLink || store.affiliateLink || "",
+          affiliateLink,
         });
       });
 
@@ -318,20 +299,46 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
       });
 
       if (nextValidRows.length) {
-        toast.success("Dry-run validation complete.");
+        toast.success(`Validated ${nextValidRows.length} coupon/deal rows ready for import!`);
       } else {
-        toast.error("No valid coupon rows found.");
+        toast.error("No valid coupon rows found in CSV.");
       }
     } catch (error) {
-      toast.error(error.message || "Unable to validate CSV.");
+      toast.error(error.message || "Unable to parse CSV file.");
     } finally {
       setIsValidating(false);
     }
   }
 
+  async function selectFile(file) {
+    if (!file) return;
+
+    const isCsvFile = file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv");
+    if (!isCsvFile) {
+      toast.error("Only CSV files (.csv) are supported.");
+      return;
+    }
+
+    try {
+      const content = await file.text();
+      setSelectedFile(file);
+      setSelectedFileContent(content);
+      await processAndValidateFile(file, content);
+    } catch {
+      toast.error("CSV file could not be read.");
+    }
+  }
+
   async function handleImport() {
-    if (!validRows.length) {
-      toast.error("Run validation first.");
+    let rowsToImport = validRows;
+
+    if (!rowsToImport.length && selectedFile) {
+      await processAndValidateFile(selectedFile, selectedFileContent);
+      rowsToImport = validRows;
+    }
+
+    if (!rowsToImport.length) {
+      toast.error("Please attach a valid CSV file first.");
       return;
     }
 
@@ -341,7 +348,7 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
       const response = await fetch("/api/offers/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows: validRows }),
+        body: JSON.stringify({ rows: rowsToImport }),
       });
       const payload = await response.json();
 
@@ -354,9 +361,9 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
 
       if (payload.data.successfullyAdded > 0) {
         await onImported?.();
-        toast.success(`${payload.data.successfullyAdded} coupons/deals imported.`);
+        toast.success(`🎉 ${payload.data.successfullyAdded} coupons/deals imported successfully!`);
       } else {
-        toast.error("Import finished, but no new coupons were added.");
+        toast.error("Import completed, but 0 new coupons were added.");
       }
     } catch (error) {
       toast.error(error.message || "Unable to import coupons.");
@@ -365,83 +372,106 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
     }
   }
 
-  async function handleCloseAndRefresh() {
-    await onImported?.();
-    handleOpenChange(false);
-  }
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         titleId={titleId}
         descriptionId={descriptionId}
-        className="max-w-[1080px] rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-0"
+        className="relative max-w-[1080px] rounded-[32px] border border-white/10 bg-zinc-950 p-0 text-white shadow-2xl overflow-hidden"
       >
+        {/* Top Cancel/Close Button */}
+        <button
+          type="button"
+          onClick={() => handleOpenChange(false)}
+          className="absolute top-6 right-6 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-all shadow-md"
+          aria-label="Cancel and Close"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
         <div className="grid gap-0 lg:grid-cols-[0.74fr_1.26fr]">
-          <div className="border-b border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-soft),var(--surface))] p-6 lg:border-r lg:border-b-0 lg:p-8">
-            <DialogHeader className="mb-7">
-              <Badge className="w-fit border border-[var(--color-primary)]/20 bg-[var(--surface)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                Bulk import
+
+          {/* Left Instructions Column */}
+          <div className="border-b border-white/10 bg-zinc-900/60 p-6 lg:border-r lg:border-b-0 lg:p-8">
+            <DialogHeader className="mb-6">
+              <Badge className="w-fit border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">
+                Bulk Import
               </Badge>
-              <DialogTitle id={titleId}>Bulk Import Coupons</DialogTitle>
-              <DialogDescription id={descriptionId}>Upload CSV, review the dry run, then import the batch.</DialogDescription>
+              <DialogTitle id={titleId} className="text-2xl font-black tracking-tight text-white mt-1">
+                Bulk Import Coupons
+              </DialogTitle>
+              <DialogDescription id={descriptionId} className="text-xs text-white/50">
+                Upload CSV, review dry run validation, and import offer batch.
+              </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4">
-              <Card className="rounded-[24px] border-[var(--border)] bg-[var(--surface)] shadow-none">
-                <CardContent className="p-5">
-                  <div className="space-y-3">
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Step 01</p>
-                      <p className="mt-2 text-sm font-medium text-[var(--text)]">Attach `offers.csv`</p>
-                    </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Step 02</p>
-                      <p className="mt-2 text-sm font-medium text-[var(--text)]">Review the dry validation report</p>
-                    </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Step 03</p>
-                      <p className="mt-2 text-sm font-medium text-[var(--text)]">Import approved coupon rows</p>
-                    </div>
+              <Card className="rounded-[22px] border border-white/10 bg-zinc-900/80 shadow-none">
+                <CardContent className="p-4 space-y-2.5">
+                  <div className="rounded-xl border border-white/8 bg-white/5 px-3.5 py-2.5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-400">Step 01</p>
+                    <p className="mt-0.5 text-xs font-semibold text-white/80">Attach <code className="text-emerald-300">offers.csv</code></p>
+                  </div>
+                  <div className="rounded-xl border border-white/8 bg-white/5 px-3.5 py-2.5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-400">Step 02</p>
+                    <p className="mt-0.5 text-xs font-semibold text-white/80">Review dry validation report</p>
+                  </div>
+                  <div className="rounded-xl border border-white/8 bg-white/5 px-3.5 py-2.5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-400">Step 03</p>
+                    <p className="mt-0.5 text-xs font-semibold text-white/80">Import approved coupon rows</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-[24px] border-[var(--border)] bg-[var(--surface)] shadow-none">
-                <CardContent className="space-y-4 p-5">
-                  <div className="grid gap-3">
-                    <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Template</span>
-                      <span className="text-sm font-medium text-[var(--text)]">CSV</span>
+              <Card className="rounded-[22px] border border-white/10 bg-zinc-900/80 shadow-none">
+                <CardContent className="space-y-3.5 p-4">
+                  <div className="grid gap-2 text-xs">
+                    <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-2">
+                      <span className="text-white/40 uppercase text-[10px] font-bold">Template</span>
+                      <span className="font-semibold text-emerald-400">CSV Standard</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Validation</span>
-                      <span className="text-sm font-medium text-[var(--text)]">Client + API</span>
+                    <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-2">
+                      <span className="text-white/40 uppercase text-[10px] font-bold">Validation</span>
+                      <span className="font-semibold text-white/80">Client + API</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Affiliate</span>
-                      <span className="text-sm font-medium text-[var(--text)]">Store fallback</span>
+                    <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-2">
+                      <span className="text-white/40 uppercase text-[10px] font-bold">Affiliate</span>
+                      <span className="font-semibold text-white/80">Store Fallback</span>
                     </div>
                   </div>
 
-                  <Button type="button" variant="outline" className="w-full rounded-xl" onClick={downloadTemplate}>
-                    Download CSV Template
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full rounded-xl border-white/15 bg-white/5 text-xs font-bold text-white hover:bg-white/10 hover:text-white transition-all py-2.5"
+                    onClick={downloadTemplate}
+                  >
+                    📥 Download CSV Template
                   </Button>
                 </CardContent>
               </Card>
             </div>
           </div>
 
-          <div className="grid gap-4 p-6 lg:p-8">
-            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-soft)]/35 p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
+          {/* Right Import & Actions Column */}
+          <div className="grid gap-5 p-6 lg:p-8 bg-zinc-950">
+
+            <div className="rounded-[24px] border border-white/10 bg-zinc-900/50 p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-[var(--text)]">Import assets</p>
-                  <p className="mt-1 text-xs text-[var(--muted)]">CSV only</p>
+                  <p className="text-sm font-black text-white">Import Assets</p>
+                  <p className="text-xs text-white/40">Select or drop Coupons CSV file below</p>
                 </div>
-                {selectedFile ? <Badge variant="outline">Ready</Badge> : null}
+                {selectedFile ? (
+                  <Badge className="border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">
+                    ✓ CSV Selected ({validRows.length} Coupons Ready)
+                  </Badge>
+                ) : null}
               </div>
 
+              {/* CSV Input Hidden */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -452,11 +482,17 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
                 }}
               />
 
+              {/* CSV Dropzone */}
               <div
                 className={cn(
-                  "rounded-[22px] border border-dashed p-5 transition",
-                  isDragging ? "border-[var(--color-primary)] bg-[var(--surface)]" : "border-[var(--border)] bg-[var(--surface)]"
+                  "rounded-[20px] border-2 border-dashed p-6 transition-all cursor-pointer",
+                  isDragging
+                    ? "border-emerald-500 bg-emerald-500/10"
+                    : selectedFile
+                    ? "border-emerald-500/50 bg-emerald-500/5"
+                    : "border-white/15 bg-white/5 hover:border-white/30 hover:bg-white/8"
                 )}
+                onClick={() => fileInputRef.current?.click()}
                 onDragOver={(event) => {
                   event.preventDefault();
                   setIsDragging(true);
@@ -468,104 +504,141 @@ export default function BulkCouponImportDialog({ open, onOpenChange, stores, off
                   void selectFile(event.dataTransfer.files?.[0]);
                 }}
               >
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-base font-semibold text-[var(--text)]">Coupons CSV</p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">Drop file here or browse manually</p>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 text-lg">
+                      🎟️
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">Coupons CSV File</p>
+                      <p className="text-xs text-white/45">
+                        {selectedFile ? selectedFile.name : "Drop file here or click to browse manually"}
+                      </p>
+                    </div>
                   </div>
-                  <Button type="button" variant="outline" className="min-w-[148px] rounded-xl bg-[var(--surface-soft)] px-4" onClick={() => fileInputRef.current?.click()}>
+                  <Button
+                    type="button"
+                    className="min-w-[130px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                  >
                     Select CSV
                   </Button>
                 </div>
               </div>
 
-              {selectedFile ? (
-                <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[var(--text)]">{selectedFile.name}</p>
-                    <p className="mt-1 text-xs text-[var(--muted)]">{Math.max(1, Math.round(selectedFile.size / 1024))} KB</p>
-                  </div>
-                  <Badge variant="outline">CSV</Badge>
-                </div>
-              ) : null}
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <Button type="button" variant="outline" className="w-full rounded-xl" disabled={isValidating || isUploading} onClick={runDryValidation}>
+              {/* Active Action Buttons */}
+              <div className="pt-2 grid gap-3 sm:grid-cols-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full rounded-xl border-white/15 bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3"
+                  disabled={!selectedFile || isValidating || isUploading}
+                  onClick={() => processAndValidateFile(selectedFile, selectedFileContent)}
+                >
                   {isValidating ? (
-                    <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-2">
                       <Spinner />
                       Validating...
                     </span>
                   ) : (
-                    "Run Dry Validation"
+                    "🔍 Run Dry Validation"
                   )}
                 </Button>
-                <Button type="button" className="w-full rounded-xl" disabled={!dryRunSummary?.validRows || isUploading || isValidating} onClick={handleImport}>
+
+                <Button
+                  type="button"
+                  className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 shadow-lg shadow-emerald-600/30"
+                  disabled={!selectedFile || isUploading || isValidating}
+                  onClick={handleImport}
+                >
                   {isUploading ? (
-                    <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-2">
                       <Spinner />
-                      Importing...
+                      Importing Coupons...
                     </span>
                   ) : (
-                    "Import Coupons"
+                    "🚀 Import Coupons Now"
                   )}
                 </Button>
               </div>
+
+              {/* Bottom Cancel Button */}
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleOpenChange(false)}
+                  className="text-xs font-semibold text-white/50 hover:text-white transition-colors"
+                >
+                  Cancel & Exit
+                </button>
+              </div>
             </div>
 
+            {/* Results / Validation Summary Card */}
             {(dryRunSummary || finalSummary) ? (
-              <Card className="rounded-[24px] border-[var(--border)] bg-[var(--surface)] shadow-none">
+              <Card className="rounded-[24px] border border-white/10 bg-zinc-900/80 shadow-none">
                 <CardContent className="space-y-4 p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-[var(--text)]">{finalSummary ? "Import Summary" : "Dry Run Summary"}</p>
-                    <Badge variant={finalSummary ? "success" : "outline"}>{finalSummary ? "Completed" : "Preview"}</Badge>
+                    <p className="text-sm font-bold text-white">
+                      {finalSummary ? "Import Result Summary" : "Dry Run Summary"}
+                    </p>
+                    <Badge className={finalSummary ? "bg-emerald-500 text-black font-bold" : "bg-white/10 text-white"}>
+                      {finalSummary ? "Done" : "Validated"}
+                    </Badge>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Total Records</p>
-                      <p className="mt-2 text-xl font-semibold text-[var(--text)]">{(finalSummary || dryRunSummary).totalRecords}</p>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 text-xs">
+                    <div className="rounded-xl border border-white/8 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase font-bold text-white/40">Total Records</p>
+                      <p className="mt-1 text-lg font-black text-white">{(finalSummary || dryRunSummary).totalRecords}</p>
                     </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{finalSummary ? "Successfully Added" : "Valid Rows"}</p>
-                        <Badge variant="success" size="sm">{finalSummary ? finalSummary.successfullyAdded : dryRunSummary.validRows}</Badge>
-                      </div>
-                      <p className="mt-2 text-xl font-semibold text-[var(--text)]">{finalSummary ? finalSummary.successfullyAdded : dryRunSummary.validRows}</p>
+                    <div className="rounded-xl border border-white/8 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase font-bold text-emerald-400">
+                        {finalSummary ? "Imported" : "Valid Rows"}
+                      </p>
+                      <p className="mt-1 text-lg font-black text-emerald-400">
+                        {finalSummary ? finalSummary.successfullyAdded : dryRunSummary.validRows}
+                      </p>
                     </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Duplicates</p>
-                        <Badge variant="warning" size="sm">{finalSummary ? finalSummary.skippedDuplicates : dryRunSummary.duplicates}</Badge>
-                      </div>
-                      <p className="mt-2 text-xl font-semibold text-[var(--text)]">{finalSummary ? finalSummary.skippedDuplicates : dryRunSummary.duplicates}</p>
+                    <div className="rounded-xl border border-white/8 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase font-bold text-amber-400">Duplicates</p>
+                      <p className="mt-1 text-lg font-black text-amber-400">
+                        {finalSummary ? finalSummary.skippedDuplicates : dryRunSummary.duplicates}
+                      </p>
                     </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Errors</p>
-                        <Badge variant="destructive" size="sm">{finalSummary ? finalSummary.failed : dryRunSummary.validationErrors}</Badge>
-                      </div>
-                      <p className="mt-2 text-xl font-semibold text-[var(--text)]">{finalSummary ? finalSummary.failed : dryRunSummary.validationErrors}</p>
+                    <div className="rounded-xl border border-white/8 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase font-bold text-rose-400">Errors</p>
+                      <p className="mt-1 text-lg font-black text-rose-400">
+                        {finalSummary ? finalSummary.failed : dryRunSummary.validationErrors}
+                      </p>
                     </div>
                   </div>
 
-                  {errors.length ? (
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Errors</p>
-                      <div className="mt-3 max-h-40 space-y-2 overflow-y-auto text-sm text-[var(--muted)]">
-                        {errors.map((error, index) => (
-                          <p key={`${error.rowNumber}-${index}`}>
-                            Row {error.rowNumber}: {error.reason}
-                          </p>
+                  {errors.length > 0 && (
+                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3">
+                      <p className="text-xs font-bold text-rose-400">Errors ({errors.length})</p>
+                      <div className="mt-2 max-h-32 overflow-y-auto space-y-1 text-xs text-rose-300">
+                        {errors.map((err, i) => (
+                          <p key={i}>Row {err.rowNumber}: {err.reason}</p>
                         ))}
                       </div>
                     </div>
-                  ) : null}
+                  )}
 
                   {finalSummary ? (
                     <div className="flex justify-end">
-                      <Button type="button" className="rounded-xl" onClick={handleCloseAndRefresh}>
-                        Close and Refresh
+                      <Button
+                        type="button"
+                        className="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+                        onClick={async () => {
+                          await onImported?.();
+                          handleOpenChange(false);
+                        }}
+                      >
+                        Done & Refresh Catalog
                       </Button>
                     </div>
                   ) : null}

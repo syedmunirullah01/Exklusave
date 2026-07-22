@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="shineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Rounded Square with Premium Emerald Gradient -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+
+  <!-- Subtle Top Glass Shine Overlay -->
+  <path d="M 0 128 C 0 57.3 57.3 0 128 0 L 384 0 C 454.7 0 512 57.3 512 128 L 512 200 C 320 240 180 210 0 150 Z" fill="url(#shineGrad)" />
+
+  <!-- Ticket/Key Notch Cutouts -->
+  <circle cx="0" cy="256" r="32" fill="#0B0F19" />
+  <circle cx="512" cy="256" r="32" fill="#0B0F19" />
+
+  <!-- Crisp Modern 'P' Monogram with Keyhole Detail for Persuekey -->
+  <g transform="translate(14, 0)">
+    <!-- Main Outer Body of P -->
+    <path d="M 155 110 H 295 C 370 110 420 152 420 225 C 420 298 370 340 295 340 H 235 V 402 H 155 Z" fill="#FFFFFF" />
+    <!-- Inner P Counter Cutout -->
+    <path d="M 235 175 H 285 C 322 175 345 194 345 225 C 345 256 322 275 285 275 H 235 Z" fill="#059669" />
+    <!-- Keyhole Detail in P -->
+    <circle cx="285" cy="225" r="16" fill="#FFFFFF" />
+  </g>
+</svg>

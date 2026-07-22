@@ -1,28 +1,8 @@
 import Link from "next/link";
 import { getPublicSiteSettings } from "@/server/services/settings-service";
+import { getAllCategories } from "@/server/repositories/categories-repository";
+import { getAllStores } from "@/server/repositories/stores-repository";
 import NewsletterForm from "@/components/layout/NewsletterForm";
-
-const topCategories = [
-  { label: "Fashion", href: "/categories/fashion" },
-  { label: "Food & Drink", href: "/categories/food" },
-  { label: "Footwear", href: "/categories/footwear" },
-  { label: "Travel", href: "/categories/travel" },
-  { label: "Beauty", href: "/categories/beauty" },
-  { label: "Furniture", href: "/categories/furniture" },
-  { label: "Home & Garden", href: "/categories/home-garden" },
-  { label: "Electronics", href: "/categories/electronics" },
-];
-
-const topStores = [
-  { label: "Waterdrop", href: "/stores/health/waterdrop" },
-  { label: "Dorothy Perkins", href: "/stores/fashion/dorothy-perkins" },
-  { label: "Debenhams", href: "/stores/fashion/debenhams" },
-  { label: "Gousto UK", href: "/stores/food/gousto-uk" },
-  { label: "EcoFlow", href: "/stores/electronics/ecoflow" },
-  { label: "FlexShopper", href: "/stores/shopping/flexshopper" },
-  { label: "Vitality", href: "/stores/health/vitality" },
-  { label: "SKIMS", href: "/stores/fashion/skims" },
-];
 
 const quickLinks = [
   { label: "Home", href: "/" },
@@ -66,17 +46,24 @@ const socialIcons = {
   ),
 };
 
-function TrustBadge({ icon, label }) {
-  return (
-    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/5 px-3 py-2">
-      <span className="text-emerald-400 text-base">{icon}</span>
-      <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/50">{label}</span>
-    </div>
-  );
-}
-
 export default async function Footer() {
-  const settings = await getPublicSiteSettings();
+  const [settings, categoriesData, storesData] = await Promise.all([
+    getPublicSiteSettings(),
+    getAllCategories().catch(() => []),
+    getAllStores().catch(() => []),
+  ]);
+
+  // Live Categories from DB (up to 8)
+  const topCategories = categoriesData.slice(0, 8).map((cat) => ({
+    label: cat.name,
+    href: `/categories/${cat.slug}`,
+  }));
+
+  // Live Stores from DB (up to 8)
+  const topStores = storesData.slice(0, 8).map((store) => ({
+    label: store.name,
+    href: `/stores/${store.categorySlug || "general"}/${store.slug}`,
+  }));
 
   const socialLinks = [
     { label: "Facebook", href: settings.social?.facebook },
@@ -151,7 +138,7 @@ export default async function Footer() {
             )}
           </div>
 
-          {/* Top Categories */}
+          {/* Top Categories (Dynamic Live Database Data) */}
           <div>
             <h4 className="mb-5 text-[10px] font-black uppercase tracking-[0.25em] text-white/30">Top Categories</h4>
             <nav className="flex flex-col gap-2.5">
@@ -168,7 +155,7 @@ export default async function Footer() {
             </nav>
           </div>
 
-          {/* Top Stores */}
+          {/* Top Stores (Dynamic Live Database Data) */}
           <div>
             <h4 className="mb-5 text-[10px] font-black uppercase tracking-[0.25em] text-white/30">Top Stores</h4>
             <nav className="flex flex-col gap-2.5">

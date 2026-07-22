@@ -15,15 +15,7 @@ export default function SectionHeader({ title, centered = false, href = "#" }) {
         <span className="text-[26px] sm:text-[36px] font-light text-zinc-300 select-none">|</span>
       </div>
 
-      {!centered && hasLink ? (
-        <Link
-          href={href}
-          className="group text-[11px] font-bold text-zinc-550 hover:text-[var(--color-primary)] transition-colors flex items-center gap-1 uppercase tracking-wider"
-        >
-          View All
-          <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-        </Link>
-      ) : null}
+
     </div>
   );
 }

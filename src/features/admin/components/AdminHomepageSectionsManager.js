@@ -466,15 +466,53 @@ export default function AdminHomepageSectionsManager() {
         <SectionCard
           title="Top Announcement Ticker Marquee"
           badge="TOP HEADER"
-          description="Edit continuous sliding ticker announcements shown at the top of the frontend homepage."
+          description="Edit continuous sliding ticker announcements, scroll speed, and exact gap spacing shown at the top of the site."
         >
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 md:col-span-2">
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Announcement Text (Separate offers with |)</span>
-              <Input
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="flex items-center gap-2 text-xs font-semibold text-zinc-800 dark:text-zinc-200 md:col-span-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sections.marquee?.enabled !== false}
+                onChange={(e) => updateSectionField("marquee", "enabled", e.target.checked)}
+                className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-emerald-600 cursor-pointer"
+              />
+              Enable Top Announcement Ticker Bar
+            </label>
+
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 md:col-span-3">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Announcement Offers (Separate each offer with |)</span>
+              <textarea
+                rows={3}
                 value={sections.marquee?.text || ""}
                 onChange={(e) => updateSectionField("marquee", "text", e.target.value)}
-                placeholder="e.g. 🔥 Neeman's Extra 10% Off | Vijay Sales Tech Deals | Nykaa Pink Sale"
+                placeholder="🔥 Addidas: Free Shipping on all orders | ⚡ Vijay Sales: Up to 50% Off | ✨ Nykaa: Hot Pink Sale Live Now!"
+                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-3 text-xs text-zinc-900 dark:text-white outline-none focus:border-emerald-500"
+              />
+              <span className="text-[11px] text-zinc-400">Tip: Each item separated by '|' will scroll continuously in the top bar.</span>
+            </label>
+
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Scroll Speed</span>
+              <select
+                value={sections.marquee?.speed || "normal"}
+                onChange={(e) => updateSectionField("marquee", "speed", e.target.value)}
+                className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2.5 text-xs text-zinc-900 dark:text-white outline-none"
+              >
+                <option value="slow">Slow (55s)</option>
+                <option value="normal">Normal (35s)</option>
+                <option value="fast">Fast (20s)</option>
+              </select>
+            </label>
+
+            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Exact Gap Between Items (Pixels)</span>
+              <Input
+                type="number"
+                min="12"
+                max="200"
+                value={sections.marquee?.gap || 48}
+                onChange={(e) => updateSectionField("marquee", "gap", Number(e.target.value) || 48)}
+                placeholder="48"
                 className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
               />
             </label>
@@ -604,48 +642,6 @@ export default function AdminHomepageSectionsManager() {
             }}
             visibleCount={featuredProductVisibleCount}
             onLoadMore={() => setFeaturedProductVisibleCount((prev) => prev + 10)}
-          />
-        </SectionCard>
-
-        {/* 5. LATEST STORES SECTION */}
-        <SectionCard
-          title="Latest Stores Section"
-          badge="RECENT CATALOG"
-          description="Configure stores to feature in the Latest Stores section."
-        >
-          <div className="mb-4 grid gap-4 md:grid-cols-2">
-            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Section Title</span>
-              <Input
-                value={sections.latestStores?.title || "Latest Stores"}
-                onChange={(e) => updateSectionField("latestStores", "title", e.target.value)}
-                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
-              />
-            </label>
-            <label className="grid gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200">Stores Limit</span>
-              <Input
-                type="number"
-                min="1"
-                max="20"
-                value={sections.latestStores?.limit || 10}
-                onChange={(e) => updateSectionField("latestStores", "limit", Number(e.target.value) || 10)}
-                className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white"
-              />
-            </label>
-          </div>
-
-          <StoreSelectionList
-            stores={stores}
-            selectedStoreSlugs={sections.latestStores?.selectedStoreSlugs || []}
-            onToggle={(slug) => toggleStoreSelection("latestStores", slug)}
-            searchValue={latestStoreSearch}
-            onSearchChange={(e) => {
-              const val = e.target.value;
-              startTransition(() => setLatestStoreSearch(val));
-            }}
-            visibleCount={latestVisibleCount}
-            onLoadMore={() => setLatestVisibleCount((prev) => prev + 10)}
           />
         </SectionCard>
 

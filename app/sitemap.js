@@ -1,5 +1,10 @@
-// app/sitemap.js — Auto-generated XML sitemap for SEO
-// Next.js will serve this at /sitemap.xml
+// app/sitemap.js — Dynamic XML sitemap for SEO
+// Next.js will serve this live at /sitemap.xml
+
+import { getAllStores } from "@/server/repositories/stores-repository";
+import { getAllCategories } from "@/server/repositories/categories-repository";
+
+export const revalidate = 0; // Dynamic route revalidation on every request
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://persuekey.com";
 
@@ -18,7 +23,7 @@ const staticRoutes = [
 export default async function sitemap() {
   const now = new Date().toISOString();
 
-  // Static routes
+  // 1. Static routes
   const staticEntries = staticRoutes.map((route) => ({
     url: `${BASE_URL}${route.url}`,
     lastModified: now,
@@ -26,36 +31,36 @@ export default async function sitemap() {
     priority: route.priority,
   }));
 
-  // Dynamic store routes
+  // 2. Dynamic store routes (Direct DB fetch — auto updates instantly when a new store is added)
   let storeEntries = [];
   try {
-    const res = await fetch(`${BASE_URL}/api/stores`, { cache: "no-store" });
-    const data = await res.json();
-    const stores = Array.isArray(data?.data) ? data.data : [];
-    storeEntries = stores.map((store) => ({
-      url: `${BASE_URL}/stores/${store.categorySlug || "general"}/${store.slug}`,
-      lastModified: store.updatedAt || now,
-      changeFrequency: "daily",
-      priority: 0.8,
-    }));
+    const stores = await getAllStores();
+    if (Array.isArray(stores)) {
+      storeEntries = stores.map((store) => ({
+        url: `${BASE_URL}/stores/${store.categorySlug || "general"}/${store.slug}`,
+        lastModified: store.updatedAt || now,
+        changeFrequency: "daily",
+        priority: 0.85,
+      }));
+    }
   } catch {
-    // fallback: no store entries
+    // Fallback if DB query fails
   }
 
-  // Dynamic category routes
+  // 3. Dynamic category routes (Direct DB fetch — auto updates instantly when a category is added)
   let categoryEntries = [];
   try {
-    const res = await fetch(`${BASE_URL}/api/categories`, { cache: "no-store" });
-    const data = await res.json();
-    const cats = Array.isArray(data?.data) ? data.data : [];
-    categoryEntries = cats.map((cat) => ({
-      url: `${BASE_URL}/categories/${cat.slug}`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.75,
-    }));
+    const categories = await getAllCategories();
+    if (Array.isArray(categories)) {
+      categoryEntries = categories.map((cat) => ({
+        url: `${BASE_URL}/categories/${cat.slug}`,
+        lastModified: now,
+        changeFrequency: "weekly",
+        priority: 0.75,
+      }));
+    }
   } catch {
-    // fallback: no category entries
+    // Fallback if DB query fails
   }
 
   return [...staticEntries, ...storeEntries, ...categoryEntries];

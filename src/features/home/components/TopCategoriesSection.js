@@ -28,13 +28,14 @@ const CATEGORY_IMAGES = {
   "default": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=150&h=150&q=80",
 };
 
-export default function TopCategoriesSection() {
-  const [categories, setCategories] = useState([]);
+export default function TopCategoriesSection({ initialCategories = [] }) {
+  const [categories, setCategories] = useState(initialCategories);
   const [activeIndex, setActiveIndex] = useState(0);
   const [visibleItems, setVisibleItems] = useState(6);
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
+    if (initialCategories.length > 0) return;
     async function loadCategories() {
       try {
         const res = await fetch("/api/categories", { cache: "no-store" });
@@ -47,7 +48,7 @@ export default function TopCategoriesSection() {
       }
     }
     loadCategories();
-  }, []);
+  }, [initialCategories]);
 
   const totalItems = categories.length;
 

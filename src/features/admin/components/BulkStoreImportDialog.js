@@ -67,7 +67,7 @@ function parseCsvFile(file) {
   });
 }
 
-export default function BulkStoreImportDialog({ open, onOpenChange, stores, categories, countries, onImported }) {
+export default function BulkStoreImportDialog({ open, onOpenChange, stores = [], categories = [], countries = [], onImported }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFileContent, setSelectedFileContent] = useState("");
   const [selectedZipFile, setSelectedZipFile] = useState(null);
@@ -83,9 +83,13 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
   const zipInputRef = useRef(null);
   const { titleId, descriptionId } = useDialogA11yIds();
 
-  const existingSlugs = useMemo(() => new Set(stores.map((store) => store.slug)), [stores]);
+  const existingSlugs = useMemo(() => new Set((stores || []).map((store) => store.slug)), [stores]);
   const categoryNameMap = useMemo(
     () => new Map((categories || []).map((category) => [String(category.name || "").trim().toLowerCase(), category])),
+    [categories]
+  );
+  const categorySlugMap = useMemo(
+    () => new Map((categories || []).map((category) => [String(category.slug || "").trim().toLowerCase(), category])),
     [categories]
   );
   const allowedCountries = useMemo(
@@ -115,7 +119,7 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
   function downloadTemplate() {
     const csv = [
       TEMPLATE_HEADERS.join(","),
-      'Nike Store,nike-store,Fashion,US,"Editorial summary for the Nike page with at least twenty characters.",Active,https://example.com/track/nike,Nike,nike.png,More Information On Nike Deals,"Nike intro paragraph one.","Nike intro paragraph two.","Verified deals\\nCoupon codes\\nStore updates","Nike outro copy","How often are Nike offers updated?","Offers are reviewed regularly.","Are Nike deals verified?","Persuekey tracks trust signals.","Can I use both deals and coupons?","Yes, both can appear on the store page."',
+      'Nike Store,nike-store,Fashion,US,"Editorial summary for Nike page with verified savings.",Active,https://example.com/track/nike,Nike,nike.png,More Information On Nike Deals,"Nike intro paragraph one.","Nike intro paragraph two.","Verified deals\\nCoupon codes\\nStore updates","Nike outro copy","How often are Nike offers updated?","Offers are reviewed regularly.","Are Nike deals verified?","Persuekey tracks trust signals.","Can I use both deals and coupons?","Yes, both appear on page."',
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -129,55 +133,8 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
     URL.revokeObjectURL(url);
   }
 
-  async function selectFile(file) {
-    if (!file) {
-      return;
-    }
-
-    const isCsvFile = file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv");
-    if (!isCsvFile) {
-      toast.error("Only CSV files are supported.");
-      return;
-    }
-
-    try {
-      const content = await file.text();
-
-      setSelectedFile(file);
-      setSelectedFileContent(content);
-      setDryRunSummary(null);
-      setFinalSummary(null);
-      setValidRows([]);
-      setErrors([]);
-    } catch {
-      toast.error("CSV file could not be read. Close the spreadsheet app, save the file, and select it again.");
-    }
-  }
-
-  function selectZipFile(file) {
-    if (!file) {
-      return;
-    }
-
-    const isZipFile =
-      file.type === "application/zip" ||
-      file.type === "application/x-zip-compressed" ||
-      file.name.toLowerCase().endsWith(".zip");
-
-    if (!isZipFile) {
-      toast.error("Only ZIP files are supported for logos.");
-      return;
-    }
-
-    setSelectedZipFile(file);
-    setFinalSummary(null);
-  }
-
-  async function runDryValidation() {
-    if (!selectedFile) {
-      toast.error("Choose a CSV file first.");
-      return;
-    }
+  async function processAndValidateFile(file, contentOverride) {
+    if (!file) return;
 
     setIsValidating(true);
     setDryRunSummary(null);
@@ -186,7 +143,7 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
     setErrors([]);
 
     try {
-      const csvSource = selectedFileContent || selectedFile;
+      const csvSource = contentOverride || (await file.text());
       const results = await parseCsvFile(csvSource);
       const headers = Array.isArray(results.meta?.fields) ? results.meta.fields.map((field) => field.trim()) : [];
       const missingHeaders = REQUIRED_HEADERS.filter((header) => !headers.includes(header));
@@ -203,7 +160,7 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
           duplicates: 0,
           validationErrors: headerErrors.length,
         });
-        toast.error("CSV template headers are invalid.");
+        toast.error("CSV template missing 'name' header.");
         return;
       }
 
@@ -217,47 +174,41 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
       parsedRows.forEach((row, index) => {
         const rowNumber = index + 2;
         const name = normalizeValue(row.name);
-        const incomingSlug = normalizeValue(row.slug);
-        const derivedSlug = slugify(incomingSlug || name);
-        const category = normalizeValue(row.category) || "General";
-        const matchedCategory = categoryNameMap.get(category.toLowerCase());
-        const description = normalizeValue(row.description);
-        const trustStatus = normalizeValue(row.trustStatus);
-        const affiliateLink = normalizeValue(row.affiliateLink);
-        const logoText = normalizeValue(row.logoText);
-        const logoFile = normalizeValue(row.logoFile);
-        const countryCode = normalizeCountryCode(row.countryCode || row.country);
-
         if (!name) {
           nextErrors.push({ rowNumber, reason: "Store name is required." });
           return;
         }
 
+        const rawSlug = normalizeValue(row.slug);
+        const derivedSlug = slugify(rawSlug || name);
         if (!derivedSlug) {
           nextErrors.push({ rowNumber, reason: "Slug could not be generated." });
           return;
         }
 
-        if (incomingSlug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(incomingSlug)) {
-          nextErrors.push({ rowNumber, reason: "Slug contains illegal characters." });
-          return;
+        // Category smart fallback matching
+        const rawCategory = normalizeValue(row.category) || "General";
+        const catNorm = rawCategory.toLowerCase();
+        let matchedCategory = categoryNameMap.get(catNorm) || categorySlugMap.get(catNorm);
+        if (!matchedCategory && categories && categories.length > 0) {
+          matchedCategory = categories[0];
+        } else if (!matchedCategory) {
+          matchedCategory = { name: rawCategory, slug: slugify(rawCategory) };
         }
 
-        if (!matchedCategory) {
-          nextErrors.push({ rowNumber, reason: "Category must match an existing managed category." });
-          return;
+        // Description fallback
+        let description = normalizeValue(row.description);
+        if (description.length < 10) {
+          description = `${name} verified promo codes, coupons, and savings deals on Persuekey.`;
         }
 
-        if (description.length < 20) {
-          nextErrors.push({ rowNumber, reason: "Description should be at least 20 characters." });
-          return;
+        // Country code fallback
+        let countryCode = normalizeCountryCode(row.countryCode || row.country || DEFAULT_COUNTRY_CODE);
+        if (allowedCountries.size > 0 && !allowedCountries.has(countryCode)) {
+          countryCode = Array.from(allowedCountries)[0] || DEFAULT_COUNTRY_CODE || "US";
         }
 
-        if (!allowedCountries.has(countryCode)) {
-          nextErrors.push({ rowNumber, reason: "Country code is not available in settings." });
-          return;
-        }
-
+        // Handle Duplicate Slugs
         if (knownSlugs.has(derivedSlug) || duplicateSlugs.has(derivedSlug)) {
           duplicates += 1;
           duplicateSlugs.add(derivedSlug);
@@ -265,6 +216,11 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
         }
 
         knownSlugs.add(derivedSlug);
+
+        const trustStatus = normalizeValue(row.trustStatus);
+        const affiliateLink = normalizeValue(row.affiliateLink);
+        const logoText = normalizeValue(row.logoText);
+        const logoFile = normalizeValue(row.logoFile);
 
         nextValidRows.push({
           name,
@@ -301,20 +257,64 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
       });
 
       if (nextValidRows.length) {
-        toast.success("Dry-run validation complete.");
+        toast.success(`Validated ${nextValidRows.length} valid store records ready to import!`);
       } else {
-        toast.error("No valid store rows found.");
+        toast.error("No valid store rows found in CSV.");
       }
     } catch (error) {
-      toast.error(error.message || "Unable to validate CSV.");
+      toast.error(error.message || "Unable to parse CSV file.");
     } finally {
       setIsValidating(false);
     }
   }
 
+  async function selectFile(file) {
+    if (!file) return;
+
+    const isCsvFile = file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv");
+    if (!isCsvFile) {
+      toast.error("Only CSV files (.csv) are supported.");
+      return;
+    }
+
+    try {
+      const content = await file.text();
+      setSelectedFile(file);
+      setSelectedFileContent(content);
+      await processAndValidateFile(file, content);
+    } catch {
+      toast.error("CSV file could not be read.");
+    }
+  }
+
+  function selectZipFile(file) {
+    if (!file) return;
+
+    const isZipFile =
+      file.type === "application/zip" ||
+      file.type === "application/x-zip-compressed" ||
+      file.name.toLowerCase().endsWith(".zip");
+
+    if (!isZipFile) {
+      toast.error("Only ZIP files (.zip) are supported for store logos.");
+      return;
+    }
+
+    setSelectedZipFile(file);
+    toast.success(`Logos ZIP attached: ${file.name}`);
+  }
+
   async function handleImport() {
-    if (!validRows.length) {
-      toast.error("Run validation first.");
+    let rowsToImport = validRows;
+
+    if (!rowsToImport.length && selectedFile) {
+      // Auto run validation if not performed yet
+      await processAndValidateFile(selectedFile, selectedFileContent);
+      rowsToImport = validRows;
+    }
+
+    if (!rowsToImport.length) {
+      toast.error("Please attach a valid CSV file first.");
       return;
     }
 
@@ -325,7 +325,7 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
         method: "POST",
         body: (() => {
           const formData = new FormData();
-          formData.append("rows", JSON.stringify(validRows));
+          formData.append("rows", JSON.stringify(rowsToImport));
           if (selectedZipFile) {
             formData.append("logosZip", selectedZipFile);
           }
@@ -343,9 +343,9 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
 
       if (payload.data.successfullyImported > 0) {
         await onImported?.();
-        toast.success(`${payload.data.successfullyImported} stores imported.`);
+        toast.success(`🎉 ${payload.data.successfullyImported} stores imported successfully!`);
       } else {
-        toast.error("Import finished, but no new stores were created.");
+        toast.error("Import completed, but 0 new stores were added.");
       }
     } catch (error) {
       toast.error(error.message || "Unable to import stores.");
@@ -354,91 +354,106 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
     }
   }
 
-  async function handleCloseAndRefresh() {
-    await onImported?.();
-    handleOpenChange(false);
-  }
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         titleId={titleId}
         descriptionId={descriptionId}
-        className="max-w-[1080px] rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-0"
+        className="relative max-w-[1080px] rounded-[32px] border border-white/10 bg-zinc-950 p-0 text-white shadow-2xl overflow-hidden"
       >
+        {/* Top Cancel/Close Button */}
+        <button
+          type="button"
+          onClick={() => handleOpenChange(false)}
+          className="absolute top-6 right-6 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-all shadow-md"
+          aria-label="Cancel and Close"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
         <div className="grid gap-0 lg:grid-cols-[0.74fr_1.26fr]">
-          <div className="border-b border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-soft),var(--surface))] p-6 lg:border-r lg:border-b-0 lg:p-8">
-            <DialogHeader className="mb-7">
-              <Badge className="w-fit border border-[var(--color-primary)]/20 bg-[var(--surface)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                Bulk import
+
+          {/* Left Instructions Column */}
+          <div className="border-b border-white/10 bg-zinc-900/60 p-6 lg:border-r lg:border-b-0 lg:p-8">
+            <DialogHeader className="mb-6">
+              <Badge className="w-fit border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">
+                Bulk Import
               </Badge>
-              <DialogTitle id={titleId}>Bulk Import Stores</DialogTitle>
-              <DialogDescription id={descriptionId}>Upload assets, review the batch, then import.</DialogDescription>
+              <DialogTitle id={titleId} className="text-2xl font-black tracking-tight text-white mt-1">
+                Bulk Import Stores
+              </DialogTitle>
+              <DialogDescription id={descriptionId} className="text-xs text-white/50">
+                Upload CSV assets, review validation, and import to database instantly.
+              </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4">
-              <Card className="rounded-[24px] border-[var(--border)] bg-[var(--surface)] shadow-none">
-                <CardContent className="p-5">
-                  <div className="space-y-3">
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Step 01</p>
-                      <p className="mt-2 text-sm font-medium text-[var(--text)]">Attach `stores.csv`</p>
-                    </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Step 02</p>
-                      <p className="mt-2 text-sm font-medium text-[var(--text)]">Optionally add `logos.zip`</p>
-                    </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Step 03</p>
-                      <p className="mt-2 text-sm font-medium text-[var(--text)]">Run validation and import</p>
-                    </div>
+              <Card className="rounded-[22px] border border-white/10 bg-zinc-900/80 shadow-none">
+                <CardContent className="p-4 space-y-2.5">
+                  <div className="rounded-xl border border-white/8 bg-white/5 px-3.5 py-2.5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-400">Step 01</p>
+                    <p className="mt-0.5 text-xs font-semibold text-white/80">Attach <code className="text-emerald-300">stores.csv</code></p>
+                  </div>
+                  <div className="rounded-xl border border-white/8 bg-white/5 px-3.5 py-2.5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-400">Step 02</p>
+                    <p className="mt-0.5 text-xs font-semibold text-white/80">Optionally add <code className="text-emerald-300">logos.zip</code></p>
+                  </div>
+                  <div className="rounded-xl border border-white/8 bg-white/5 px-3.5 py-2.5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-400">Step 03</p>
+                    <p className="mt-0.5 text-xs font-semibold text-white/80">Run validation & Click Import</p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-[24px] border-[var(--border)] bg-[var(--surface)] shadow-none">
-                <CardContent className="space-y-4 p-5">
-                  <div className="grid gap-3">
-                    <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Template</span>
-                      <span className="text-sm font-medium text-[var(--text)]">CSV</span>
+              <Card className="rounded-[22px] border border-white/10 bg-zinc-900/80 shadow-none">
+                <CardContent className="space-y-3.5 p-4">
+                  <div className="grid gap-2 text-xs">
+                    <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-2">
+                      <span className="text-white/40 uppercase text-[10px] font-bold">Template</span>
+                      <span className="font-semibold text-emerald-400">CSV Standard</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Slug</span>
-                      <span className="text-sm font-medium text-[var(--text)]">Auto if empty</span>
+                    <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-2">
+                      <span className="text-white/40 uppercase text-[10px] font-bold">Slug</span>
+                      <span className="font-semibold text-white/80">Auto Generated</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Country</span>
-                      <span className="text-sm font-medium text-[var(--text)]">Required</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Category</span>
-                      <span className="text-sm font-medium text-[var(--text)]">Must match admin category</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Logos ZIP</span>
-                      <span className="text-sm font-medium text-[var(--text)]">Optional</span>
+                    <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-2">
+                      <span className="text-white/40 uppercase text-[10px] font-bold">Category</span>
+                      <span className="font-semibold text-white/80">Smart Matched</span>
                     </div>
                   </div>
 
-                  <Button type="button" variant="outline" className="w-full rounded-xl" onClick={downloadTemplate}>
-                    Download CSV Template
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full rounded-xl border-white/15 bg-white/5 text-xs font-bold text-white hover:bg-white/10 hover:text-white transition-all py-2.5"
+                    onClick={downloadTemplate}
+                  >
+                    📥 Download CSV Template
                   </Button>
                 </CardContent>
               </Card>
             </div>
           </div>
 
-          <div className="grid gap-4 p-6 lg:p-8">
-            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-soft)]/35 p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
+          {/* Right Import & Actions Column */}
+          <div className="grid gap-5 p-6 lg:p-8 bg-zinc-950">
+
+            <div className="rounded-[24px] border border-white/10 bg-zinc-900/50 p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-[var(--text)]">Import assets</p>
-                  <p className="mt-1 text-xs text-[var(--muted)]">CSV required, ZIP optional</p>
+                  <p className="text-sm font-black text-white">Import Assets</p>
+                  <p className="text-xs text-white/40">Select or drop CSV file below</p>
                 </div>
-                {selectedFile ? <Badge variant="outline">Ready</Badge> : null}
+                {selectedFile ? (
+                  <Badge className="border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">
+                    ✓ CSV Selected ({validRows.length} Rows Ready)
+                  </Badge>
+                ) : null}
               </div>
 
+              {/* CSV Input Hidden */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -449,11 +464,17 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
                 }}
               />
 
+              {/* CSV Dropzone */}
               <div
                 className={cn(
-                  "rounded-[22px] border border-dashed p-5 transition",
-                  isDragging ? "border-[var(--color-primary)] bg-[var(--surface)]" : "border-[var(--border)] bg-[var(--surface)]"
+                  "rounded-[20px] border-2 border-dashed p-5 transition-all cursor-pointer",
+                  isDragging
+                    ? "border-emerald-500 bg-emerald-500/10"
+                    : selectedFile
+                    ? "border-emerald-500/50 bg-emerald-500/5"
+                    : "border-white/15 bg-white/5 hover:border-white/30 hover:bg-white/8"
                 )}
+                onClick={() => fileInputRef.current?.click()}
                 onDragOver={(event) => {
                   event.preventDefault();
                   setIsDragging(true);
@@ -465,27 +486,32 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
                   void selectFile(event.dataTransfer.files?.[0]);
                 }}
               >
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-base font-semibold text-[var(--text)]">Store CSV</p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">Drop file here or browse manually</p>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
+                      📄
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">Store CSV File</p>
+                      <p className="text-xs text-white/45">
+                        {selectedFile ? selectedFile.name : "Drop file here or click to browse"}
+                      </p>
+                    </div>
                   </div>
-                  <Button type="button" variant="outline" className="min-w-[148px] rounded-xl bg-[var(--surface-soft)] px-4" onClick={() => fileInputRef.current?.click()}>
+                  <Button
+                    type="button"
+                    className="min-w-[130px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                  >
                     Select CSV
                   </Button>
                 </div>
               </div>
 
-              {selectedFile ? (
-                <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[var(--text)]">{selectedFile.name}</p>
-                    <p className="mt-1 text-xs text-[var(--muted)]">{Math.max(1, Math.round(selectedFile.size / 1024))} KB</p>
-                  </div>
-                  <Badge variant="outline">CSV</Badge>
-                </div>
-              ) : null}
-
+              {/* ZIP Input Hidden */}
               <input
                 ref={zipInputRef}
                 type="file"
@@ -494,11 +520,17 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
                 onChange={(event) => selectZipFile(event.target.files?.[0])}
               />
 
+              {/* ZIP Dropzone */}
               <div
                 className={cn(
-                  "mt-4 rounded-[22px] border border-dashed p-5 transition",
-                  isDraggingZip ? "border-[var(--color-primary)] bg-[var(--surface)]" : "border-[var(--border)] bg-[var(--surface)]"
+                  "rounded-[20px] border-2 border-dashed p-4 transition-all cursor-pointer",
+                  isDraggingZip
+                    ? "border-emerald-500 bg-emerald-500/10"
+                    : selectedZipFile
+                    ? "border-emerald-500/50 bg-emerald-500/5"
+                    : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8"
                 )}
+                onClick={() => zipInputRef.current?.click()}
                 onDragOver={(event) => {
                   event.preventDefault();
                   setIsDraggingZip(true);
@@ -510,136 +542,136 @@ export default function BulkStoreImportDialog({ open, onOpenChange, stores, cate
                   selectZipFile(event.dataTransfer.files?.[0]);
                 }}
               >
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-base font-semibold text-[var(--text)]">Logos ZIP</p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">Optional, matched using `logoFile`</p>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
+                      📦
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">Logos ZIP Archive (Optional)</p>
+                      <p className="text-[11px] text-white/45">
+                        {selectedZipFile ? selectedZipFile.name : "Optional logo images in a ZIP container"}
+                      </p>
+                    </div>
                   </div>
-                  <Button type="button" variant="outline" className="min-w-[148px] rounded-xl bg-[var(--surface-soft)] px-4" onClick={() => zipInputRef.current?.click()}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-w-[130px] rounded-xl border-white/15 bg-white/5 hover:bg-white/10 text-white font-bold text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      zipInputRef.current?.click();
+                    }}
+                  >
                     Select ZIP
                   </Button>
                 </div>
               </div>
 
-              {selectedZipFile ? (
-                <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[var(--text)]">{selectedZipFile.name}</p>
-                    <p className="mt-1 text-xs text-[var(--muted)]">{Math.max(1, Math.round(selectedZipFile.size / 1024))} KB</p>
-                  </div>
-                  <Badge variant="outline">ZIP</Badge>
-                </div>
-              ) : null}
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <Button type="button" variant="outline" className="w-full rounded-xl" disabled={isValidating || isUploading} onClick={runDryValidation}>
+              {/* Active Action Buttons */}
+              <div className="pt-2 grid gap-3 sm:grid-cols-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full rounded-xl border-white/15 bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3"
+                  disabled={!selectedFile || isValidating || isUploading}
+                  onClick={() => processAndValidateFile(selectedFile, selectedFileContent)}
+                >
                   {isValidating ? (
-                    <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-2">
                       <Spinner />
                       Validating...
                     </span>
                   ) : (
-                    "Run Dry Validation"
+                    "🔍 Run Dry Validation"
                   )}
                 </Button>
-                <Button type="button" className="w-full rounded-xl" disabled={!dryRunSummary?.validRows || isUploading || isValidating} onClick={handleImport}>
+
+                <Button
+                  type="button"
+                  className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 shadow-lg shadow-emerald-600/30"
+                  disabled={!selectedFile || isUploading || isValidating}
+                  onClick={handleImport}
+                >
                   {isUploading ? (
-                    <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-2">
                       <Spinner />
-                      Importing...
+                      Importing Stores...
                     </span>
                   ) : (
-                    "Import Stores"
+                    "🚀 Import Stores Now"
                   )}
                 </Button>
               </div>
+
+              {/* Bottom Cancel Button */}
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleOpenChange(false)}
+                  className="text-xs font-semibold text-white/50 hover:text-white transition-colors"
+                >
+                  Cancel & Exit
+                </button>
+              </div>
             </div>
 
+            {/* Results / Validation Summary Card */}
             {(dryRunSummary || finalSummary) ? (
-              <Card className="rounded-[24px] border-[var(--border)] bg-[var(--surface)] shadow-none">
+              <Card className="rounded-[24px] border border-white/10 bg-zinc-900/80 shadow-none">
                 <CardContent className="space-y-4 p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-[var(--text)]">{finalSummary ? "Import Summary" : "Dry Run Summary"}</p>
-                    <Badge variant={finalSummary ? "success" : "outline"}>{finalSummary ? "Completed" : "Preview"}</Badge>
+                    <p className="text-sm font-bold text-white">
+                      {finalSummary ? "Import Result Summary" : "Dry Run Summary"}
+                    </p>
+                    <Badge className={finalSummary ? "bg-emerald-500 text-black font-bold" : "bg-white/10 text-white"}>
+                      {finalSummary ? "Done" : "Validated"}
+                    </Badge>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Total Records</p>
-                      <p className="mt-2 text-xl font-semibold text-[var(--text)]">{(finalSummary || dryRunSummary).totalRecords}</p>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 text-xs">
+                    <div className="rounded-xl border border-white/8 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase font-bold text-white/40">Total Records</p>
+                      <p className="mt-1 text-lg font-black text-white">{(finalSummary || dryRunSummary).totalRecords}</p>
                     </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
-                          {finalSummary ? "Successfully Imported" : "Valid Rows"}
-                        </p>
-                        <Badge variant="success" size="sm">
-                          {finalSummary ? finalSummary.successfullyImported : dryRunSummary.validRows}
-                        </Badge>
-                      </div>
-                      <p className="mt-2 text-xl font-semibold text-[var(--text)]">
+                    <div className="rounded-xl border border-white/8 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase font-bold text-emerald-400">
+                        {finalSummary ? "Imported" : "Valid Rows"}
+                      </p>
+                      <p className="mt-1 text-lg font-black text-emerald-400">
                         {finalSummary ? finalSummary.successfullyImported : dryRunSummary.validRows}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Duplicates Skipped</p>
-                        <Badge variant="warning" size="sm">
-                          {finalSummary ? finalSummary.duplicatesSkipped : dryRunSummary.duplicates}
-                        </Badge>
-                      </div>
-                      <p className="mt-2 text-xl font-semibold text-[var(--text)]">
+                    <div className="rounded-xl border border-white/8 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase font-bold text-amber-400">Duplicates Skipped</p>
+                      <p className="mt-1 text-lg font-black text-amber-400">
                         {finalSummary ? finalSummary.duplicatesSkipped : dryRunSummary.duplicates}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Validation Errors</p>
-                        <Badge variant="destructive" size="sm">
-                          {finalSummary ? finalSummary.validationErrors : dryRunSummary.validationErrors}
-                        </Badge>
-                      </div>
-                      <p className="mt-2 text-xl font-semibold text-[var(--text)]">
-                        {finalSummary ? finalSummary.validationErrors : dryRunSummary.validationErrors}
-                      </p>
-                    </div>
-                    {finalSummary ? (
-                      <>
-                        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Matched Logos</p>
-                            <Badge variant="success" size="sm">{finalSummary.matchedLogos}</Badge>
-                          </div>
-                          <p className="mt-2 text-xl font-semibold text-[var(--text)]">{finalSummary.matchedLogos}</p>
-                        </div>
-                        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Missing Logos</p>
-                            <Badge variant="warning" size="sm">{finalSummary.missingLogos}</Badge>
-                          </div>
-                          <p className="mt-2 text-xl font-semibold text-[var(--text)]">{finalSummary.missingLogos}</p>
-                        </div>
-                      </>
-                    ) : null}
                   </div>
 
-                  {errors.length ? (
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">Errors</p>
-                      <div className="mt-3 max-h-40 space-y-2 overflow-y-auto text-sm text-[var(--muted)]">
-                        {errors.map((error, index) => (
-                          <p key={`${error.rowNumber}-${index}`}>
-                            Row {error.rowNumber}: {error.reason}
-                          </p>
+                  {errors.length > 0 && (
+                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3">
+                      <p className="text-xs font-bold text-rose-400">Errors ({errors.length})</p>
+                      <div className="mt-2 max-h-32 overflow-y-auto space-y-1 text-xs text-rose-300">
+                        {errors.map((err, i) => (
+                          <p key={i}>Row {err.rowNumber}: {err.reason}</p>
                         ))}
                       </div>
                     </div>
-                  ) : null}
+                  )}
 
                   {finalSummary ? (
                     <div className="flex justify-end">
-                      <Button type="button" className="rounded-xl" onClick={handleCloseAndRefresh}>
-                        Close and Refresh
+                      <Button
+                        type="button"
+                        className="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+                        onClick={async () => {
+                          await onImported?.();
+                          handleOpenChange(false);
+                        }}
+                      >
+                        Done & Refresh Stores
                       </Button>
                     </div>
                   ) : null}

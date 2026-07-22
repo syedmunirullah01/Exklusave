@@ -4,6 +4,7 @@ import { getAllOffers, getOffersByStoreSlug } from "@/server/repositories/offers
 import { getAllProducts, getProductByStoreAndSlug, getProductsByStoreSlug } from "@/server/repositories/products-repository";
 import { getSettings } from "@/server/repositories/settings-repository";
 import { getAllStores, getStoreBySlug } from "@/server/repositories/stores-repository";
+import { getAllCategories } from "@/server/repositories/categories-repository";
 import { normalizeCountryCode } from "@/lib/countries";
 
 function isOfferExpired(offer) {
@@ -209,7 +210,11 @@ function filterStoresByCountry(stores, countryCode) {
 }
 
 export async function getStoreDirectoryData(search = "", countryCode) {
-  const [stores, offers] = await Promise.all([getAllStores(), getAllOffers()]);
+  const [stores, offers, dbCategories] = await Promise.all([
+    getAllStores(),
+    getAllOffers(),
+    getAllCategories(),
+  ]);
   const scopedStores = filterStoresByCountry(stores, countryCode);
   const allowedStoreSlugs = new Set(scopedStores.map((store) => store.slug));
   const activeOffers = offers
@@ -230,23 +235,24 @@ export async function getStoreDirectoryData(search = "", countryCode) {
       })
     : scopedStores;
 
-  const categories = [...new Set(filteredStores.map((store) => store.category))].map((category, index) => ({
-    name: category,
-    active: index === 0,
-  }));
-
   return {
     breadcrumbItems: normalizedSearch
       ? ["Home", "Stores", `Search: ${search}`]
-      : ["Home", "Stores", categories[0]?.name || "All Stores"],
-    categories,
+      : ["Home", "Stores", dbCategories[0]?.name || "All Stores"],
+    categories: dbCategories,
     stores: filteredStores.map(buildStoreDirectoryRecord),
     searchValue: search,
   };
 }
 
 export async function getHomePageData(countryCode) {
-  const [stores, offers, products, settings] = await Promise.all([getAllStores(), getAllOffers(), getAllProducts(), getSettings()]);
+  const [stores, offers, products, settings, categories] = await Promise.all([
+    getAllStores(),
+    getAllOffers(),
+    getAllProducts(),
+    getSettings(),
+    getAllCategories(),
+  ]);
   const scopedStores = filterStoresByCountry(stores, countryCode);
   const allowedStoreSlugs = new Set(scopedStores.map((store) => store.slug));
   const activeOffers = offers
@@ -278,6 +284,8 @@ export async function getHomePageData(countryCode) {
 
   return {
     hero: settings.homepage.hero,
+    categories,
+    marquee: settings.homepage.sections.marquee,
     latestStoresTitle: homepageSections.latestStores.title,
     latestStores: latestStoresSource.slice(0, homepageSections.latestStores.limit).map((store) => ({
       name: store.name,

@@ -1,18 +1,5 @@
 [
   {
-    "id": "blog_1",
-    "title": "Top 10 Shopping Tips to Save Big in 2026",
-    "slug": "top-10-shopping-tips-2026",
-    "category": "Shopping Guide",
-    "author": "Persuekey Editorial",
-    "readTime": "5 min read",
-    "image": "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop",
-    "shortDescription": "Discover the best insider promo code hacks, coupon stacking methods, and flash deal alerts.",
-    "status": "Published",
-    "createdAt": "2026-07-20T10:00:00.000Z",
-    "updatedAt": "2026-07-20T10:00:00.000Z"
-  },
-  {
     "id": "blog_2",
     "title": "How to Find Hidden Coupons on Electronics & Tech Brands",
     "slug": "how-to-find-hidden-coupons-electronics",
@@ -24,5 +11,19 @@
     "status": "Published",
     "createdAt": "2026-07-21T08:30:00.000Z",
     "updatedAt": "2026-07-21T08:30:00.000Z"
+  },
+  {
+    "id": "blog_1",
+    "title": "Top 10 Shopping Tips to Save Big in 2026",
+    "slug": "top-10-shopping-tips-2026",
+    "category": "Shopping Guide",
+    "author": "Persuekey Editorial",
+    "readTime": "5 min read",
+    "image": "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop",
+    "shortDescription": "The Hidden Benefits of Walking Every Day\n\nIn today's fast-paced world, many people overlook one of the simplest forms of exercise: walking. It doesn't require expensive equipment, a gym membership, or special training. Yet, a daily walk can have a significant positive impact on both physical and mental health.\n\nWalking for just 30 minutes a day helps improve heart health, strengthens muscles, and boosts overall fitness. It also supports weight management by burning calories and increasing metabolism. Unlike intense workouts, walking is gentle on the joints, making it suitable for people of all ages.\n\nBeyond physical health, walking is also beneficial for mental well-being. Spending time outdoors, especially in parks or natural surroundings, can reduce stress and improve mood. Many people find that walking helps them think more clearly, solve problems, and feel more creative.\n\nAnother advantage of walking is that it encourages consistency. Because it is easy to fit into a daily routine, people are more likely to maintain the habit over time. Whether it's walking to work, taking the stairs, or enjoying an evening stroll, every step contributes to a healthier lifestyle.\n\nIn conclusion, walking is a simple yet powerful activity that offers numerous health benefits. By making it a daily habit, individuals can improve their physical fitness, mental health, and overall quality of life. Sometimes, the smallest changes can lead to the greatest results.",
+    "content": "",
+    "status": "Published",
+    "createdAt": "2026-07-20T10:00:00.000Z",
+    "updatedAt": "2026-07-22T22:24:28.230Z"
   }
 ]
