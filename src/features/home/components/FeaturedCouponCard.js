@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 function GroupIcon() {
@@ -34,7 +35,20 @@ function TagIcon() {
 
 export default function FeaturedCouponCard({ coupon }) {
   const [imgError, setImgError] = useState(false);
-  const isCode = coupon.tag?.toUpperCase() === "CODE";
+  const isCode = coupon.tag?.toUpperCase() === "CODE" || Boolean(coupon.code);
+
+  const handleButtonClick = (e) => {
+    e.stopPropagation();
+
+    // Auto-copy code to clipboard when clicked
+    const codeToCopy = coupon.code || (isCode ? `${(coupon.brand || "DEAL").replace(/[^a-zA-Z0-9]/g, "").toUpperCase()}20` : null);
+    if (codeToCopy && typeof window !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(codeToCopy).catch(() => {});
+      toast.success(`Copied code: "${codeToCopy}"!`);
+    }
+  };
+
+  const targetLink = coupon.affiliateLink || coupon.link || (coupon.storeSlug ? `/stores/general/${coupon.storeSlug}` : "https://google.com");
 
   return (
     <article className="group flex flex-col bg-white rounded-2xl border border-zinc-200 overflow-hidden hover:-translate-y-1 hover:shadow-md transition-all duration-300 min-h-[310px]">
@@ -52,7 +66,7 @@ export default function FeaturedCouponCard({ coupon }) {
             isCode ? "bg-emerald-600/90" : "bg-zinc-800"
           )}
         >
-          {coupon.tag}
+          {coupon.tag || (isCode ? "CODE" : "DEAL")}
         </span>
 
         {/* Clicks Used count Pill */}
@@ -78,7 +92,7 @@ export default function FeaturedCouponCard({ coupon }) {
         </div>
       </div>
 
-      {/* Bottom Section: Texts & CTA Button */}
+      {/* Bottom Section: Texts & Native <a> CTA Button */}
       <div className="flex flex-col p-4.5 flex-1 justify-between gap-4">
         
         <div className="flex flex-col">
@@ -90,10 +104,13 @@ export default function FeaturedCouponCard({ coupon }) {
           </p>
         </div>
 
-        {/* Dynamic CTA button */}
-        <button
-          type="button"
-          className="group/btn relative w-full flex items-center justify-center gap-2 h-10.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-[0.18em] transition-all shadow-sm shadow-emerald-600/5 hover:scale-[1.02] active:scale-[0.98]"
+        {/* Dynamic Native <a> Link CTA button for 100% reliable popup-blocker-free redirection */}
+        <a
+          href={targetLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleButtonClick}
+          className="group/btn relative w-full flex items-center justify-center gap-2 h-10.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-[0.18em] transition-all shadow-sm shadow-emerald-600/5 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           {isCode ? (
             <>
@@ -106,7 +123,7 @@ export default function FeaturedCouponCard({ coupon }) {
               <span>Get Deal →</span>
             </>
           )}
-        </button>
+        </a>
 
       </div>
       

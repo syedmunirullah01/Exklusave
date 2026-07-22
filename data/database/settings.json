@@ -126,7 +126,11 @@
       },
       "featuredCoupons": {
         "title": "Featured Coupons",
-        "selectedOfferIds": [],
+        "selectedOfferIds": [
+          "offer_addidas_73k18jeq",
+          "offer_addidas_uuwqw2vf",
+          "offer_addidas_gzyzcsau"
+        ],
         "limit": 4
       },
       "featuredProducts": {
@@ -138,6 +142,16 @@
         "title": "Latest Stores",
         "selectedStoreSlugs": [],
         "limit": 10
+      },
+      "marquee": {
+        "enabled": true,
+        "text": "🔥 Neeman's Extra 10% Off | Vijay Sales Tech Deals | Nykaa Hot Pink Sale | Ajio Fashion Sale",
+        "speed": "normal"
+      },
+      "topCategories": {
+        "title": "Top Categories",
+        "selectedCategorySlugs": [],
+        "limit": 8
       }
     }
   }
